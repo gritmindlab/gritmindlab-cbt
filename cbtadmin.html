@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>그릿마인드랩 CBT 관리자</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMXRmSlgfchAMvNaLrh-VzvtsaT8zcF48",
+      authDomain: "gritmindlab-cbt.firebaseapp.com",
+      projectId: "gritmindlab-cbt",
+      storageBucket: "gritmindlab-cbt.firebasestorage.app",
+      messagingSenderId: "468296058186",
+      appId: "1:468296058186:web:155e2dc31658bfb62d6db3",
+      measurementId: "G-HNTVL8QJLE"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      window.__firebase = { db, collection, getDocs, query, orderBy, addDoc, deleteDoc, doc, updateDoc, ready: true };
+      window.dispatchEvent(new Event('firebase-ready'));
+    } catch (e) {
+      console.error('Firebase 초기화 실패:', e);
+      window.__firebase = { ready: false, error: e };
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #f0f4f8;
+      color: #1a2332;
+      min-height: 100vh;
+    }
+
+    /* ── 비밀번호 화면 ── */
+    #screen-pw {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .pw-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 3rem 2.5rem;
+      width: 360px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.09);
+      text-align: center;
+    }
+    .pw-card h2 { font-size: 1.2rem; margin-bottom: .4rem; }
+    .pw-card p { font-size: .85rem; color: #6b7a8d; margin-bottom: 1.6rem; }
+    .pw-card input {
+      width: 100%;
+      border: 1.5px solid #d1d9e6;
+      border-radius: 8px;
+      padding: 11px 12px;
+      font-size: .95rem;
+      text-align: center;
+      letter-spacing: 2px;
+      margin-bottom: 1rem;
+    }
+    .pw-card input:focus { outline: none; border-color: #1a3a5c; }
+    .pw-card button {
+      width: 100%;
+      background: #1a3a5c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .pw-card button:hover { background: #14304d; }
+    .pw-error { color: #e63946; font-size: .8rem; margin-top: .6rem; display: none; }
+
+    /* ── 관리자 화면 ── */
+    #screen-admin { display: none; }
+
+    header {
+      background: #1a3a5c;
+      color: #fff;
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header .logo { font-size: 1.05rem; font-weight: 700; }
+    header .refresh-btn {
+      background: rgba(255,255,255,.12);
+      border: none;
+      color: #fff;
+      padding: 7px 16px;
+      border-radius: 7px;
+      font-size: .85rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    header .refresh-btn:hover { background: rgba(255,255,255,.22); }
+
+    .main-wrap { max-width: 1280px; margin: 0 auto; padding: 1.8rem 1.5rem; display: flex; gap: 1.2rem; align-items: flex-start; }
+    .exam-sidebar {
+      width: 220px; flex-shrink: 0; background: #fff; border-radius: 14px;
+      padding: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+    .exam-sidebar h4 { font-size: .8rem; color: #6b7a8d; margin-bottom: .7rem; text-transform: uppercase; letter-spacing: .5px; }
+    .exam-item {
+      padding: 10px 12px; border-radius: 8px; font-size: .88rem; font-weight: 500;
+      cursor: pointer; margin-bottom: 4px; color: #44546b; word-break: break-all;
+    }
+    .exam-item:hover { background: #f0f4f8; }
+    .exam-item.active { background: #1a3a5c; color: #fff; font-weight: 700; }
+    .exam-add-btn {
+      width: 100%; margin-top: .6rem; padding: 9px; border-radius: 8px;
+      border: 1.5px dashed #c2cbd9; background: #fff; color: #44546b; font-size: .82rem;
+      cursor: pointer; font-weight: 600;
+    }
+    .exam-add-btn:hover { background: #f7f9fc; border-color: #1a3a5c; }
+    .content-area { flex: 1; min-width: 0; }
+
+    /* 요약 카드 */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.6rem;
+    }
+    .summary-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.1rem 1.3rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    }
+    .summary-card .label { font-size: .78rem; color: #6b7a8d; margin-bottom: .35rem; }
+    .summary-card .value { font-size: 1.5rem; font-weight: 700; color: #1a3a5c; }
+    .summary-card .value.avg { color: #2a6f4b; }
+    .summary-card .value.low { color: #e63946; }
+
+    /* 필터/검색 바 */
+    .toolbar {
+      display: flex;
+      gap: .7rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .toolbar input, .toolbar select {
+      border: 1.5px solid #d1d9e6;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: .85rem;
+      font-family: inherit;
+      background: #fff;
+    }
+    .toolbar input:focus, .toolbar select:focus { outline: none; border-color: #1a3a5c; }
+    .toolbar .search-box { flex: 1; min-width: 180px; }
+    .toolbar .export-btn {
+      margin-left: auto;
+      background: #2a6f4b;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: .85rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .toolbar .export-btn:hover { background: #21593b; }
+
+    /* 데이터 테이블 */
+    .table-wrap {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    thead th {
+      background: #f7f9fc;
+      color: #44546b;
+      text-align: left;
+      padding: 11px 14px;
+      font-weight: 700;
+      border-bottom: 2px solid #e2e8f0;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { background: #eef2f7; }
+    thead th .arrow { font-size: .7rem; color: #aab4c2; margin-left: 3px; }
+    tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #eef1f5;
+      white-space: nowrap;
+    }
+    tbody tr:hover { background: #f7f9fc; cursor: pointer; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .score-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: .82rem;
+    }
+    .score-high { background: #e6f4ea; color: #2a6f4b; }
+    .score-mid { background: #fff4e0; color: #b8740a; }
+    .score-low { background: #fde8e9; color: #c1121f; }
+
+    .timeup-tag {
+      font-size: .72rem;
+      background: #fde8e9;
+      color: #c1121f;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #8a97a8;
+    }
+    .empty-state .icon { font-size: 2.2rem; margin-bottom: .8rem; }
+
+    /* 상세 모달 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(20,30,45,.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 1.5rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 640px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 1.8rem 2rem;
+    }
+    .modal-card h3 { font-size: 1.15rem; margin-bottom: .2rem; }
+    .modal-sub { font-size: .82rem; color: #6b7a8d; margin-bottom: 1.2rem; }
+    .modal-close {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: #8a97a8;
+      line-height: 1;
+    }
+    .answer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: .6rem;
+      margin-top: .8rem;
+    }
+    .answer-item {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: .8rem;
+    }
+    .answer-item.correct { border-color: #2a6f4b; background: #f3faf5; }
+    .answer-item.wrong { border-color: #e63946; background: #fef4f4; }
+    .answer-item .qn { font-weight: 700; color: #44546b; margin-bottom: 2px; }
+    .answer-item .cat { font-size: .7rem; color: #8a97a8; }
+
+    @media (max-width: 900px) {
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ── 탭 ── */
+    .tabs {
+      display: flex;
+      gap: .4rem;
+      margin-bottom: 1.4rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 18px;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #8a97a8;
+      cursor: pointer;
+      font-family: inherit;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+    }
+    .tab-btn.active { color: #1a3a5c; border-bottom-color: #1a3a5c; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── 문제 관리 ── */
+    .q-form-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.6rem 1.8rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      margin-bottom: 1.6rem;
+    }
+    .q-form-card h3 { font-size: 1rem; margin-bottom: 1.2rem; }
+    .form-row { display: grid; grid-template-columns: 1fr; gap: .5rem; margin-bottom: 1rem; }
+    .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .form-row label { font-size: .8rem; font-weight: 700; color: #44546b; }
+    .form-row input[type="text"], .form-row input[type="number"], .form-row select, .form-row textarea {
+      border: 1.5px solid #d1d9e6;
+      border-radius: 8px;
+      padding: 9px 11px;
+      font-size: .88rem;
+      font-family: inherit;
+      width: 100%;
+    }
+    .form-row textarea { resize: vertical; min-height: 70px; }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus { outline: none; border-color: #1a3a5c; }
+
+    .data-type-toggle { display: flex; gap: .6rem; margin-bottom: .8rem; }
+    .data-type-toggle button {
+      flex: 1;
+      padding: 8px;
+      border: 1.5px solid #d1d9e6;
+      background: #fff;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 700;
+      color: #6b7a8d;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .data-type-toggle button.active { border-color: #1a3a5c; background: #e8f0fe; color: #1a3a5c; }
+
+    .choice-row { display: flex; gap: .6rem; align-items: center; margin-bottom: .6rem; }
+    .choice-row .choice-label {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #1a3a5c; color: #fff; font-size: .78rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .choice-row input { flex: 1; }
+
+    .img-preview { max-width: 220px; border-radius: 8px; border: 1.5px solid #e2e8f0; margin-top: .5rem; display: none; }
+
+    .btn-save {
+      background: #1a3a5c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 22px;
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-save:hover { background: #14304d; }
+    .btn-save:disabled { background: #b9c2cd; cursor: not-allowed; }
+
+    .q-list-item {
+      background: #fff;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: .7rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .q-list-item .qi-num {
+      background: #1a3a5c; color: #fff; border-radius: 50%;
+      width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .85rem; flex-shrink: 0;
+    }
+    .q-list-item .qi-body { flex: 1; }
+    .q-list-item .qi-cat { font-size: .72rem; color: #1a3a5c; background: #e8f0fe; border-radius: 12px; padding: 2px 9px; display: inline-block; margin-bottom: 4px; }
+    .q-list-item .qi-text { font-size: .85rem; color: #1a2332; line-height: 1.5; }
+    .q-list-item .qi-actions { display: flex; gap: .4rem; flex-shrink: 0; }
+    .q-list-item .qi-actions button {
+      background: none; border: 1.5px solid #e2e8f0; border-radius: 7px;
+      padding: 5px 11px; font-size: .76rem; cursor: pointer; font-family: inherit; color: #44546b;
+    }
+    .q-list-item .qi-actions button.danger { color: #e63946; border-color: #f3c5c8; }
+    .q-list-item .qi-actions button:hover { background: #f7f9fc; }
+
+    /* ── 문제 미리보기 모달 ── */
+    .preview-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(20,30,45,.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      padding: 1.5rem;
+    }
+    .preview-overlay.open { display: flex; }
+    .preview-modal {
+      background: #f0f4f8;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 640px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.6rem;
+      position: relative;
+    }
+    .preview-modal .preview-close {
+      position: absolute;
+      top: 1.1rem; right: 1.2rem;
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 50%;
+      width: 32px; height: 32px;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #6b7a8d;
+      z-index: 2;
+    }
+    .preview-modal .preview-label {
+      font-size: .78rem;
+      font-weight: 700;
+      color: #8a97a8;
+      margin-bottom: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    /* CBT 화면과 동일한 문제 카드 스타일 */
+    .pv-question-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    }
+    .pv-q-meta { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.2rem; }
+    .pv-q-num {
+      background: #1a3a5c; color: #fff; border-radius: 50%;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .95rem; flex-shrink: 0;
+    }
+    .pv-q-category {
+      font-size: .75rem; background: #e8f0fe; color: #1a3a5c;
+      border-radius: 20px; padding: 3px 10px; font-weight: 500;
+    }
+    .pv-q-text { font-size: .95rem; line-height: 1.75; margin-bottom: 1.4rem; }
+    .pv-q-data {
+      background: #ffffff;
+      border: 2px solid #6b7a8d;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.4rem;
+      font-size: .88rem;
+      line-height: 1.8;
+    }
+    .pv-q-data table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+    .pv-q-data th { background: #1a3a5c; color: #fff; padding: 7px 10px; text-align: center; }
+    .pv-q-data td { padding: 6px 10px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+    .pv-q-data tr:nth-child(even) td { background: #f0f4f8; }
+    .pv-choices { display: flex; flex-direction: column; gap: .7rem; }
+    .pv-choice {
+      display: flex; align-items: center; gap: .9rem;
+      padding: 12px 16px; border: 2px solid #d1d9e6; border-radius: 10px; font-size: .9rem;
+    }
+    .pv-choice-num {
+      width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .82rem; flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── 비밀번호 화면 ── -->
+<div id="screen-pw">
+  <div class="pw-card">
+    <h2>🔒 관리자 화면</h2>
+    <p>접속 비밀번호를 입력해 주세요.</p>
+    <input type="password" id="pw-input" placeholder="비밀번호" onkeydown="if(event.key==='Enter')checkPw()" />
+    <button onclick="checkPw()">접속하기</button>
+    <div class="pw-error" id="pw-error">비밀번호가 올바르지 않습니다.</div>
+  </div>
+</div>
+
+<!-- ── 관리자 화면 ── -->
+<div id="screen-admin">
+  <header>
+    <div class="logo">그릿마인드랩 CBT 관리자</div>
+    <button class="refresh-btn" onclick="loadData()">⟳ 새로고침</button>
+  </header>
+
+  <div class="main-wrap">
+
+    <div class="exam-sidebar">
+      <h4>📁 시험 목록</h4>
+      <div id="exam-list"></div>
+      <button class="exam-add-btn" onclick="addNewExam()">＋ 새 시험 추가</button>
+    </div>
+
+    <div class="content-area">
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-btn-submissions" onclick="switchTab('submissions')">📋 제출 현황</button>
+      <button class="tab-btn" id="tab-btn-questions" onclick="switchTab('questions')">📝 문제 관리</button>
+    </div>
+
+    <!-- ══════════ 탭 1: 제출 현황 ══════════ -->
+    <div class="tab-panel active" id="tab-panel-submissions">
+
+    <!-- 요약 카드 -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="label">총 응시자</div>
+        <div class="value" id="sum-total">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">평균 점수</div>
+        <div class="value avg" id="sum-avg">0점</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">최고 점수</div>
+        <div class="value avg" id="sum-max">0점</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">최저 점수</div>
+        <div class="value low" id="sum-min">0점</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">시간초과 제출</div>
+        <div class="value low" id="sum-timeup">0명</div>
+      </div>
+    </div>
+
+    <!-- 툴바 -->
+    <div class="toolbar">
+      <input type="text" class="search-box" id="search-input" placeholder="이름, 학교로 검색..." oninput="renderTable()" />
+      <select id="filter-school" onchange="renderTable()">
+        <option value="">전체 학교</option>
+      </select>
+      <button class="export-btn" onclick="exportCSV()">⬇ CSV 다운로드</button>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="table-wrap">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th onclick="sortBy('school')">학교 <span class="arrow" id="arrow-school"></span></th>
+            <th onclick="sortBy('grade')">학년·반·번호 <span class="arrow" id="arrow-grade"></span></th>
+            <th onclick="sortBy('name')">이름 <span class="arrow" id="arrow-name"></span></th>
+            <th onclick="sortBy('score')">점수 <span class="arrow" id="arrow-score"></span></th>
+            <th onclick="sortBy('answeredCount')">응답률 <span class="arrow" id="arrow-answeredCount"></span></th>
+            <th onclick="sortBy('elapsedSeconds')">소요시간 <span class="arrow" id="arrow-elapsedSeconds"></span></th>
+            <th onclick="sortBy('submittedAt')">제출일시 <span class="arrow" id="arrow-submittedAt"></span></th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <div class="icon">📭</div>
+        <div>아직 제출된 답안이 없습니다.</div>
+      </div>
+    </div>
+
+    </div>
+    <!-- ══════════ /탭 1 ══════════ -->
+
+    <!-- ══════════ 탭 2: 문제 관리 ══════════ -->
+    <div class="tab-panel" id="tab-panel-questions">
+
+      <div class="q-form-card">
+        <h3 id="q-form-title">➕ 새 문제 추가</h3>
+        <div style="font-size:.8rem;color:#6b7a8d;margin-bottom:1rem;">현재 시험: <strong id="current-exam-label" style="color:#1a3a5c;">-</strong></div>
+        <input type="hidden" id="qf-editing-id" value="" />
+
+        <div class="form-row cols-2">
+          <div>
+            <label>문제 번호</label>
+            <input type="number" id="qf-num" placeholder="예) 1" min="1" />
+          </div>
+          <div>
+            <label>영역</label>
+            <select id="qf-cat">
+              <option value="의사소통능력">의사소통능력</option>
+              <option value="수리능력">수리능력</option>
+              <option value="문제해결능력">문제해결능력</option>
+              <option value="자기개발능력">자기개발능력</option>
+              <option value="자원관리능력">자원관리능력</option>
+              <option value="대인관계능력">대인관계능력</option>
+              <option value="정보능력">정보능력</option>
+              <option value="기술능력">기술능력</option>
+              <option value="조직이해능력">조직이해능력</option>
+              <option value="직업윤리">직업윤리</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>세트 문제 범위 (선택사항)</label>
+          <input type="text" id="qf-setrange" placeholder="예) 25~26  (지문을 공유하는 세트 문제일 때만 입력)" />
+        </div>
+
+        <div class="form-row">
+          <label>문제 내용</label>
+          <textarea id="qf-text" placeholder="문제 본문을 입력하세요"></textarea>
+        </div>
+
+        <div class="form-row">
+          <label>자료 (표·그래프 등, 선택사항)</label>
+          <div class="data-type-toggle">
+            <button type="button" id="qf-datatype-none" class="active" onclick="setDataType('none')">없음</button>
+            <button type="button" id="qf-datatype-table" onclick="setDataType('table')">표(글자로 입력)</button>
+            <button type="button" id="qf-datatype-image" onclick="setDataType('image')">이미지 업로드</button>
+          </div>
+          <div id="qf-datatype-table-area" style="display:none;">
+            <textarea id="qf-table-html" placeholder="표 내용을 HTML로 입력하세요. 예) <table><tr><th>구분</th><th>값</th></tr><tr><td>A</td><td>10</td></tr></table>"></textarea>
+          </div>
+          <div id="qf-datatype-image-area" style="display:none;">
+            <input type="file" id="qf-image-input" accept="image/*" onchange="handleImageSelect(event)" />
+            <img id="qf-image-preview" class="img-preview" />
+          </div>
+        </div>
+
+        <div class="form-row" style="background:#f7f9fc;border-radius:10px;padding:.9rem 1rem;border:1.5px solid #e2e8f0;">
+          <label>＋ 추가 박스 (조건·메모 등, 선택사항 / 표·이미지와 별도로 같이 넣을 수 있어요)</label>
+          <input type="text" id="qf-box-title" placeholder="박스 제목 (예: 조건) - 비워두면 제목 없이 표시" style="margin-bottom:.5rem;" />
+          <textarea id="qf-box-text" placeholder="한 줄에 하나씩 입력하세요. 자동으로 줄마다 글머리 기호(•)가 붙어요.&#10;예)&#10;동일한 종류의 발전기 2대를 설치한다.&#10;총 설치 예산은 1,000kWh당 95,000원을 초과하지 않는다."></textarea>
+        </div>
+
+        <div class="form-row">
+          <label>보기 (5개)</label>
+          <div class="choice-row"><div class="choice-label">①</div><input type="text" id="qf-choice-0" placeholder="보기 1" /></div>
+          <div class="choice-row"><div class="choice-label">②</div><input type="text" id="qf-choice-1" placeholder="보기 2" /></div>
+          <div class="choice-row"><div class="choice-label">③</div><input type="text" id="qf-choice-2" placeholder="보기 3" /></div>
+          <div class="choice-row"><div class="choice-label">④</div><input type="text" id="qf-choice-3" placeholder="보기 4" /></div>
+          <div class="choice-row"><div class="choice-label">⑤</div><input type="text" id="qf-choice-4" placeholder="보기 5" /></div>
+        </div>
+
+        <div class="form-row">
+          <label>정답</label>
+          <select id="qf-answer">
+            <option value="">선택</option>
+            <option value="0">① 번</option>
+            <option value="1">② 번</option>
+            <option value="2">③ 번</option>
+            <option value="3">④ 번</option>
+            <option value="4">⑤ 번</option>
+          </select>
+        </div>
+
+        <button class="btn-save" id="qf-save-btn" onclick="saveQuestion()">문제 저장</button>
+        <button class="btn-save" id="qf-cancel-btn" style="display:none;background:#8a97a8;margin-left:.5rem;" onclick="resetForm()">취소</button>
+        <span class="status" id="qf-status" style="margin-left:1rem;"></span>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <h3 style="font-size:1rem;">등록된 문제 목록 (<span id="q-count">0</span>개)</h3>
+        <button class="btn-save" style="background:#2a6f4b;font-size:.82rem;padding:8px 16px;" onclick="openFullPreview()">🔍 전체 시험 미리보기</button>
+      </div>
+      <div id="q-list"></div>
+
+    </div>
+    <!-- ══════════ /탭 2 ══════════ -->
+
+    </div>
+  </div>
+</div>
+
+<!-- ── 문제 미리보기 모달 (단일 문제) ── -->
+<div class="preview-overlay" id="preview-overlay" onclick="if(event.target===this)closePreview()">
+  <div class="preview-modal">
+    <button class="preview-close" onclick="closePreview()">✕</button>
+    <div class="preview-label" id="preview-label">학생 화면 미리보기</div>
+
+    <!-- 전체 미리보기용 네비게이션 -->
+    <div id="preview-nav" style="display:none; justify-content:space-between; align-items:center; margin-bottom:.8rem;">
+      <button class="btn-save" style="background:#fff;color:#1a3a5c;border:1.5px solid #1a3a5c;padding:7px 14px;font-size:.82rem;" onclick="previewNav(-1)">← 이전</button>
+      <span id="preview-nav-label" style="font-size:.82rem;color:#6b7a8d;font-weight:700;"></span>
+      <button class="btn-save" style="background:#fff;color:#1a3a5c;border:1.5px solid #1a3a5c;padding:7px 14px;font-size:.82rem;" onclick="previewNav(1)">다음 →</button>
+    </div>
+
+    <div class="pv-question-card">
+      <div class="pv-q-meta">
+        <div class="pv-q-num" id="pv-q-num">1</div>
+        <div class="pv-q-category" id="pv-q-cat">영역</div>
+        <div id="pv-q-setbadge" style="display:none;font-size:.75rem;background:#eef1f5;color:#6b7a8d;border-radius:20px;padding:3px 10px;font-weight:700;"></div>
+      </div>
+      <div class="pv-q-text" id="pv-q-text"></div>
+      <div class="pv-q-data" id="pv-q-data" style="display:none;"></div>
+      <div class="pv-choices" id="pv-choices"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 상세 모달 ── -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 id="modal-name">-</h3>
+    <div class="modal-sub" id="modal-sub">-</div>
+    <div id="modal-score-line"></div>
+    <div class="answer-grid" id="modal-answers"></div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PW = 'grit9161';
+
+let allSubmissions = [];
+let sortKey = 'submittedAt';
+let sortDir = 'desc';
+
+function checkPw() {
+  const val = document.getElementById('pw-input').value;
+  if (val === ADMIN_PW) {
+    document.getElementById('screen-pw').style.display = 'none';
+    document.getElementById('screen-admin').style.display = 'block';
+    initAdmin();
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+  }
+}
+
+async function initAdmin() {
+  // 문제(정답 포함)를 먼저 불러온 뒤, 그 정답 기준으로 제출 현황을 채점한다.
+  await loadQuestions();
+  await loadData();
+}
+
+// ── 탭 전환 ──
+function switchTab(tab) {
+  document.getElementById('tab-btn-submissions').classList.toggle('active', tab === 'submissions');
+  document.getElementById('tab-btn-questions').classList.toggle('active', tab === 'questions');
+  document.getElementById('tab-panel-submissions').classList.toggle('active', tab === 'submissions');
+  document.getElementById('tab-panel-questions').classList.toggle('active', tab === 'questions');
+}
+
+function questionsForExam(examCode) {
+  return allQuestions.filter(q => q.examCode === examCode).sort((a,b) => (a.num||0) - (b.num||0));
+}
+
+function scoreOf(answers, examCode) {
+  const qs = examCode ? questionsForExam(examCode) : allQuestions;
+  if (!qs || qs.length === 0) return 0;
+  let correct = 0;
+  qs.forEach((q, i) => {
+    if (q.answer !== undefined && q.answer !== null && answers[i] === q.answer) correct++;
+  });
+  return Math.round((correct / qs.length) * 100);
+}
+
+function correctCountOf(answers, examCode) {
+  const qs = examCode ? questionsForExam(examCode) : allQuestions;
+  if (!qs || qs.length === 0) return 0;
+  let correct = 0;
+  qs.forEach((q, i) => {
+    if (q.answer !== undefined && q.answer !== null && answers[i] === q.answer) correct++;
+  });
+  return correct;
+}
+
+async function loadData() {
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#8a97a8;">불러오는 중...</td></tr>`;
+
+  let waited = 0;
+  while ((!window.__firebase || !window.__firebase.ready) && waited < 5000) {
+    if (window.__firebase && window.__firebase.error) break;
+    await new Promise(r => setTimeout(r, 200));
+    waited += 200;
+  }
+  if (!window.__firebase || !window.__firebase.ready) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#e63946;">Firebase 연결 실패. 새로고침 해주세요.</td></tr>`;
+    return;
+  }
+
+  try {
+    const { db, collection, getDocs, query, orderBy } = window.__firebase;
+    const q = query(collection(db, "submissions"), orderBy("submittedAt", "desc"));
+    const snap = await getDocs(q);
+    allSubmissions = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      allSubmissions.push({
+        id: doc.id,
+        examCode: d.examCode || '',
+        school: d.school || '-',
+        grade: d.grade || '-',
+        cls: d.class || '-',
+        number: d.number || '-',
+        name: d.name || '-',
+        answers: d.answers || [],
+        answeredCount: d.answeredCount ?? 0,
+        totalQuestions: d.totalQuestions ?? allQuestions.length,
+        elapsedSeconds: d.elapsedSeconds ?? 0,
+        timeUp: !!d.timeUp,
+        submittedAt: d.submittedAt ? d.submittedAt.toDate() : null,
+        score: scoreOf(d.answers || [], d.examCode || '')
+      });
+    });
+    populateSchoolFilter();
+    renderExamSidebar();
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#e63946;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>`;
+  }
+}
+
+function populateSchoolFilter() {
+  const sel = document.getElementById('filter-school');
+  const schools = [...new Set(allSubmissions.map(s => s.school))].sort();
+  const current = sel.value;
+  sel.innerHTML = '<option value="">전체 학교</option>' + schools.map(s => `<option value="${s}">${s}</option>`).join('');
+  sel.value = current;
+}
+
+function renderSummary() {
+  const filtered = currentExamCode ? allSubmissions.filter(s => s.examCode === currentExamCode) : [];
+  const total = filtered.length;
+  document.getElementById('sum-total').textContent = total + '명';
+  if (total === 0) {
+    document.getElementById('sum-avg').textContent = '-';
+    document.getElementById('sum-max').textContent = '-';
+    document.getElementById('sum-min').textContent = '-';
+    document.getElementById('sum-timeup').textContent = '0명';
+    return;
+  }
+  const scores = filtered.map(s => s.score);
+  const avg = Math.round(scores.reduce((a,b) => a+b, 0) / total);
+  const max = Math.max(...scores);
+  const min = Math.min(...scores);
+  const timeupCount = filtered.filter(s => s.timeUp).length;
+  document.getElementById('sum-avg').textContent = avg + '점';
+  document.getElementById('sum-max').textContent = max + '점';
+  document.getElementById('sum-min').textContent = min + '점';
+  document.getElementById('sum-timeup').textContent = timeupCount + '명';
+}
+
+function sortBy(key) {
+  if (sortKey === key) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey = key;
+    sortDir = 'desc';
+  }
+  renderTable();
+}
+
+function getFiltered() {
+  const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
+  const schoolFilter = document.getElementById('filter-school').value;
+  let list = allSubmissions.filter(s => {
+    const matchExam = !currentExamCode || s.examCode === currentExamCode;
+    const matchSearch = !searchTerm || s.name.toLowerCase().includes(searchTerm) || s.school.toLowerCase().includes(searchTerm);
+    const matchSchool = !schoolFilter || s.school === schoolFilter;
+    return matchExam && matchSearch && matchSchool;
+  });
+
+  list.sort((a, b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if (sortKey === 'submittedAt') { va = va ? va.getTime() : 0; vb = vb ? vb.getTime() : 0; }
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  return list;
+}
+
+function renderTable() {
+  // 정렬 화살표 갱신
+  ['school','grade','name','score','answeredCount','elapsedSeconds','submittedAt'].forEach(k => {
+    const el = document.getElementById('arrow-' + k);
+    if (!el) return;
+    el.textContent = sortKey === k ? (sortDir === 'asc' ? '▲' : '▼') : '';
+  });
+
+  const list = getFiltered();
+  const tbody = document.getElementById('table-body');
+  const emptyState = document.getElementById('empty-state');
+
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('data-table').style.display = allSubmissions.length === 0 ? 'none' : 'table';
+    emptyState.style.display = 'block';
+    emptyState.querySelector('div:last-child').textContent = allSubmissions.length === 0
+      ? '아직 제출된 답안이 없습니다.'
+      : '검색/필터 조건에 맞는 결과가 없습니다.';
+    return;
+  }
+  document.getElementById('data-table').style.display = 'table';
+  emptyState.style.display = 'none';
+
+  tbody.innerHTML = list.map(s => {
+    const scoreClass = s.score >= 80 ? 'score-high' : s.score >= 50 ? 'score-mid' : 'score-low';
+    const em = Math.floor(s.elapsedSeconds / 60), es = s.elapsedSeconds % 60;
+    const dateStr = s.submittedAt ? s.submittedAt.toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+    return `
+      <tr onclick="openModal('${s.id}')">
+        <td>${s.school}</td>
+        <td>${s.grade} ${s.cls}반 ${s.number}번</td>
+        <td>${s.name}</td>
+        <td><span class="score-badge ${scoreClass}">${s.score}점</span></td>
+        <td>${s.answeredCount}/${s.totalQuestions}</td>
+        <td>${em}분 ${es}초 ${s.timeUp ? '<span class="timeup-tag">시간초과</span>' : ''}</td>
+        <td>${dateStr}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openModal(id) {
+  const s = allSubmissions.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('modal-name').textContent = `${s.name} (${s.school} ${s.grade} ${s.cls}반 ${s.number}번)`;
+  const em = Math.floor(s.elapsedSeconds / 60), es = s.elapsedSeconds % 60;
+  document.getElementById('modal-sub').textContent = `소요시간 ${em}분 ${es}초 · 응답 ${s.answeredCount}/${s.totalQuestions} · ${s.timeUp ? '시간초과 자동제출' : '정상 제출'}`;
+
+  const examQs = questionsForExam(s.examCode);
+  const correctCount = correctCountOf(s.answers, s.examCode);
+  document.getElementById('modal-score-line').innerHTML =
+    `<div style="margin-bottom:.4rem;"><span class="score-badge ${s.score>=80?'score-high':s.score>=50?'score-mid':'score-low'}" style="font-size:1rem;">${s.score}점</span>
+    <span style="color:#6b7a8d;font-size:.85rem;margin-left:.5rem;">(${correctCount} / ${examQs.length} 문항 정답)</span></div>`;
+
+  document.getElementById('modal-answers').innerHTML = examQs.map((q, i) => {
+    const userAns = s.answers[i];
+    const isCorrect = userAns === q.answer;
+    const isUnanswered = userAns === undefined || userAns === -1;
+    const labels = ['①','②','③','④','⑤'];
+    return `
+      <div class="answer-item ${isUnanswered ? '' : (isCorrect ? 'correct' : 'wrong')}">
+        <div class="qn">${q.num}번 ${isUnanswered ? '(미응답)' : (isCorrect ? '✓' : '✗')}</div>
+        <div class="cat">${q.cat}</div>
+        <div style="margin-top:4px;">
+          선택: ${isUnanswered ? '-' : labels[userAns]} ${isCorrect ? '' : `→ 정답: ${labels[q.answer]}`}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function exportCSV() {
+  const list = getFiltered();
+  if (list.length === 0) { alert('내보낼 데이터가 없습니다.'); return; }
+
+  const headers = ['학교','학년','반','번호','이름','점수','정답수','응답수','전체문항','소요시간(초)','시간초과','제출일시'];
+  const rows = list.map(s => [
+    s.school, s.grade, s.cls, s.number, s.name,
+    s.score, correctCountOf(s.answers, s.examCode), s.answeredCount, s.totalQuestions,
+    s.elapsedSeconds, s.timeUp ? 'Y' : 'N',
+    s.submittedAt ? s.submittedAt.toLocaleString('ko-KR') : '-'
+  ]);
+
+  let csv = '\uFEFF' + headers.join(',') + '\n';
+  rows.forEach(r => {
+    csv += r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + '\n';
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `CBT_제출현황_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════
+// ── 문제 관리 ──
+// ═══════════════════════════════════════════
+
+let allQuestions = [];
+let currentDataType = 'none';
+let currentImageDataUri = '';
+let currentExamCode = localStorage.getItem('cbt_admin_exam') || '';
+
+function getExamCodes() {
+  const fromQ = allQuestions.map(q => q.examCode).filter(Boolean);
+  const fromS = (typeof allSubmissions !== 'undefined' ? allSubmissions : []).map(s => s.examCode).filter(Boolean);
+  return [...new Set([...fromQ, ...fromS])].sort();
+}
+
+function renderExamSidebar() {
+  const codes = getExamCodes();
+  if (!currentExamCode || !codes.includes(currentExamCode)) {
+    currentExamCode = codes[0] || '';
+  }
+  localStorage.setItem('cbt_admin_exam', currentExamCode);
+
+  const listEl = document.getElementById('exam-list');
+  if (codes.length === 0) {
+    listEl.innerHTML = `<div style="font-size:.82rem;color:#8a97a8;padding:10px 4px;">아직 시험이 없어요.<br>아래 버튼으로 추가하세요.</div>`;
+  } else {
+    listEl.innerHTML = codes.map(code => `
+      <div class="exam-item ${code === currentExamCode ? 'active' : ''}" onclick="selectExam('${code.replace(/'/g, "\\'")}')">${code}</div>
+    `).join('');
+  }
+
+  const label = document.getElementById('current-exam-label');
+  if (label) label.textContent = currentExamCode || '(시험을 선택하세요)';
+
+  renderQuestionList();
+  if (typeof renderSummary === 'function') renderSummary();
+  if (typeof renderTable === 'function') renderTable();
+}
+
+function selectExam(code) {
+  currentExamCode = code;
+  renderExamSidebar();
+  resetForm();
+}
+
+function addNewExam() {
+  const code = prompt('새 시험 코드를 입력하세요.\n(학생들이 응시 화면에서 입력할 코드예요. 영문/숫자 권장)');
+  if (!code) return;
+  const trimmed = code.trim();
+  if (!trimmed) return;
+  currentExamCode = trimmed;
+  renderExamSidebar();
+  resetForm();
+  switchTab('questions');
+}
+
+function setDataType(type) {
+  currentDataType = type;
+  ['none', 'table', 'image'].forEach(t => {
+    document.getElementById('qf-datatype-' + t).classList.toggle('active', t === type);
+  });
+  document.getElementById('qf-datatype-table-area').style.display = type === 'table' ? 'block' : 'none';
+  document.getElementById('qf-datatype-image-area').style.display = type === 'image' ? 'block' : 'none';
+}
+
+function handleImageSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 1.5 * 1024 * 1024) {
+    alert('이미지 용량이 너무 큽니다 (1.5MB 이하 권장). 작은 이미지를 사용해 주세요.');
+    event.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    currentImageDataUri = e.target.result;
+    const preview = document.getElementById('qf-image-preview');
+    preview.src = currentImageDataUri;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetForm() {
+  document.getElementById('qf-editing-id').value = '';
+  document.getElementById('qf-num').value = '';
+  document.getElementById('qf-cat').value = '의사소통능력';
+  document.getElementById('qf-setrange').value = '';
+  document.getElementById('qf-text').value = '';
+  document.getElementById('qf-table-html').value = '';
+  document.getElementById('qf-box-title').value = '';
+  document.getElementById('qf-box-text').value = '';
+  document.getElementById('qf-image-input').value = '';
+  document.getElementById('qf-image-preview').style.display = 'none';
+  document.getElementById('qf-image-preview').src = '';
+  currentImageDataUri = '';
+  for (let i = 0; i < 5; i++) document.getElementById('qf-choice-' + i).value = '';
+  document.getElementById('qf-answer').value = '';
+  setDataType('none');
+  document.getElementById('q-form-title').textContent = '➕ 새 문제 추가';
+  document.getElementById('qf-cancel-btn').style.display = 'none';
+  document.getElementById('qf-status').textContent = '';
+}
+
+async function saveQuestion() {
+  if (!currentExamCode) {
+    alert('먼저 왼쪽에서 시험을 선택하거나 "＋ 새 시험 추가"로 시험을 만들어 주세요.');
+    return;
+  }
+  const editingId = document.getElementById('qf-editing-id').value;
+  const num = parseInt(document.getElementById('qf-num').value);
+  const cat = document.getElementById('qf-cat').value;
+  const setRange = document.getElementById('qf-setrange').value.trim();
+  const text = document.getElementById('qf-text').value.trim();
+  const choices = [0,1,2,3,4].map(i => document.getElementById('qf-choice-' + i).value.trim());
+  const answerVal = document.getElementById('qf-answer').value;
+  const statusEl = document.getElementById('qf-status');
+
+  if (!num || !text || choices.some(c => !c) || answerVal === '') {
+    statusEl.style.color = '#e63946';
+    statusEl.textContent = '문제 번호, 문제 내용, 보기 5개, 정답을 모두 입력해 주세요.';
+    return;
+  }
+  const answer = parseInt(answerVal);
+
+  let mediaOnly = '';
+  if (currentDataType === 'table') {
+    mediaOnly = document.getElementById('qf-table-html').value.trim();
+  } else if (currentDataType === 'image') {
+    if (currentImageDataUri) {
+      mediaOnly = `<img src="${currentImageDataUri}" alt="문제 자료" style="max-width:100%;border-radius:6px;" />`;
+    } else if (editingId) {
+      // 수정 중이면서 새 이미지를 선택 안 한 경우, 기존 데이터 유지
+      const existing = allQuestions.find(q => q.id === editingId);
+      mediaOnly = existing ? (existing.mediaOnly !== undefined ? existing.mediaOnly : existing.data) : '';
+    }
+  }
+
+  const boxTitle = document.getElementById('qf-box-title').value.trim();
+  const boxText = document.getElementById('qf-box-text').value.trim();
+  let boxHtml = '';
+  if (boxText) {
+    const lines = boxText.split('\n').map(l => l.trim()).filter(Boolean);
+    boxHtml = `<div style="border:1.5px solid #d1d9e6;border-radius:10px;background:#f7f9fc;margin-top:1rem;padding:.9rem 1.1rem;">` +
+      (boxTitle ? `<div style="text-align:center;font-weight:700;color:#1a3a5c;margin-bottom:.6rem;">${boxTitle}</div>` : '') +
+      `<ul style="margin:0;padding-left:1.2rem;line-height:1.8;">${lines.map(l => `<li>${l}</li>`).join('')}</ul></div>`;
+  }
+  const data = mediaOnly + boxHtml;
+
+  const saveBtn = document.getElementById('qf-save-btn');
+  saveBtn.disabled = true;
+  statusEl.style.color = '#6b7a8d';
+  statusEl.textContent = '저장 중...';
+
+  const ok = await waitFirebaseQ();
+  if (!ok) {
+    statusEl.style.color = '#e63946';
+    statusEl.textContent = 'Firebase 연결 실패. 새로고침 해주세요.';
+    saveBtn.disabled = false;
+    return;
+  }
+
+  try {
+    const { db, collection, addDoc, updateDoc, doc } = window.__firebase;
+    const payload = { num, cat, setRange, text, data, mediaOnly, boxTitle, boxText, choices, answer, examCode: currentExamCode };
+
+    if (editingId) {
+      await updateDoc(doc(db, "questions", editingId), payload);
+      statusEl.style.color = '#2a6f4b';
+      statusEl.textContent = '문제가 수정되었습니다.';
+    } else {
+      await addDoc(collection(db, "questions"), payload);
+      statusEl.style.color = '#2a6f4b';
+      statusEl.textContent = '문제가 저장되었습니다.';
+    }
+
+    resetForm();
+    await loadQuestions();
+  } catch (e) {
+    console.error(e);
+    statusEl.style.color = '#e63946';
+    statusEl.textContent = '저장 중 오류가 발생했습니다: ' + e.message;
+  } finally {
+    saveBtn.disabled = false;
+  }
+}
+
+async function waitFirebaseQ() {
+  let waited = 0;
+  while ((!window.__firebase || !window.__firebase.ready) && waited < 5000) {
+    if (window.__firebase && window.__firebase.error) break;
+    await new Promise(r => setTimeout(r, 200));
+    waited += 200;
+  }
+  return !!(window.__firebase && window.__firebase.ready);
+}
+
+async function loadQuestions() {
+  const listEl = document.getElementById('q-list');
+  listEl.innerHTML = `<div style="text-align:center;padding:2rem;color:#8a97a8;">불러오는 중...</div>`;
+
+  const ok = await waitFirebaseQ();
+  if (!ok) {
+    listEl.innerHTML = `<div style="text-align:center;padding:2rem;color:#e63946;">Firebase 연결 실패. 새로고침 해주세요.</div>`;
+    return;
+  }
+
+  try {
+    const { db, collection, getDocs, query, orderBy } = window.__firebase;
+    const q = query(collection(db, "questions"), orderBy("num", "asc"));
+    const snap = await getDocs(q);
+    allQuestions = [];
+    snap.forEach(d => allQuestions.push({ id: d.id, ...d.data() }));
+    renderExamSidebar();
+  } catch (e) {
+    console.error(e);
+    listEl.innerHTML = `<div style="text-align:center;padding:2rem;color:#e63946;">문제를 불러오는 중 오류가 발생했습니다.</div>`;
+  }
+}
+
+function renderQuestionList() {
+  const filtered = currentExamCode ? allQuestions.filter(q => q.examCode === currentExamCode) : [];
+  document.getElementById('q-count').textContent = filtered.length;
+  const listEl = document.getElementById('q-list');
+
+  if (!currentExamCode) {
+    listEl.innerHTML = `<div style="text-align:center;padding:3rem;color:#8a97a8;">왼쪽에서 시험을 선택하거나, "＋ 새 시험 추가"로 시작하세요.</div>`;
+    return;
+  }
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div style="text-align:center;padding:3rem;color:#8a97a8;">이 시험에 등록된 문제가 없습니다.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(q => {
+    const preview = (q.text || '').length > 70 ? q.text.slice(0, 70) + '...' : (q.text || '');
+    const labels = ['①','②','③','④','⑤'];
+    const answerBadge = (q.answer !== undefined && q.answer !== null)
+      ? `<span style="font-size:.72rem;background:#e6f4ea;color:#2a6f4b;border-radius:12px;padding:2px 9px;margin-left:6px;font-weight:700;">정답 ${labels[q.answer]}</span>`
+      : `<span style="font-size:.72rem;background:#fde8e9;color:#e63946;border-radius:12px;padding:2px 9px;margin-left:6px;font-weight:700;">정답 미입력</span>`;
+    const setBadge = q.setRange
+      ? `<span style="font-size:.72rem;background:#eef1f5;color:#6b7a8d;border-radius:12px;padding:2px 9px;margin-left:6px;font-weight:700;">${q.setRange.length > 20 ? q.setRange.slice(0,20) + '...' : q.setRange}</span>`
+      : '';
+    return `
+      <div class="q-list-item">
+        <div class="qi-num">${q.num}</div>
+        <div class="qi-body">
+          <div class="qi-cat">${q.cat}${answerBadge}${setBadge}</div>
+          <div class="qi-text">${preview}</div>
+        </div>
+        <div class="qi-actions">
+          <button onclick="previewQuestion('${q.id}')">미리보기</button>
+          <button onclick="editQuestion('${q.id}')">수정</button>
+          <button class="danger" onclick="deleteQuestion('${q.id}')">삭제</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function editQuestion(id) {
+  const q = allQuestions.find(x => x.id === id);
+  if (!q) return;
+
+  document.getElementById('qf-editing-id').value = id;
+  document.getElementById('qf-num').value = q.num;
+  document.getElementById('qf-cat').value = q.cat;
+  document.getElementById('qf-setrange').value = q.setRange || '';
+  document.getElementById('qf-text').value = q.text;
+  (q.choices || []).forEach((c, i) => {
+    const el = document.getElementById('qf-choice-' + i);
+    if (el) el.value = c;
+  });
+  document.getElementById('qf-answer').value = (q.answer !== undefined && q.answer !== null) ? String(q.answer) : '';
+
+  const media = q.mediaOnly !== undefined ? q.mediaOnly : q.data;
+
+  if (media && media.includes('<img')) {
+    setDataType('image');
+    const preview = document.getElementById('qf-image-preview');
+    const srcMatch = media.match(/src="([^"]+)"/);
+    if (srcMatch) {
+      preview.src = srcMatch[1];
+      preview.style.display = 'block';
+      currentImageDataUri = ''; // 새로 고르지 않으면 기존 유지
+    }
+  } else if (media) {
+    setDataType('table');
+    document.getElementById('qf-table-html').value = media;
+  } else {
+    setDataType('none');
+  }
+
+  document.getElementById('qf-box-title').value = q.boxTitle || '';
+  document.getElementById('qf-box-text').value = q.boxText || '';
+
+  document.getElementById('q-form-title').textContent = `✏️ ${q.num}번 문제 수정`;
+  document.getElementById('qf-cancel-btn').style.display = 'inline-block';
+  document.getElementById('qf-status').textContent = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function deleteQuestion(id) {
+  const q = allQuestions.find(x => x.id === id);
+  if (!q) return;
+  if (!confirm(`${q.num}번 문제를 삭제하시겠습니까?`)) return;
+
+  const ok = await waitFirebaseQ();
+  if (!ok) { alert('Firebase 연결 실패. 새로고침 해주세요.'); return; }
+
+  try {
+    const { db, deleteDoc, doc } = window.__firebase;
+    await deleteDoc(doc(db, "questions", id));
+    await loadQuestions();
+  } catch (e) {
+    console.error(e);
+    alert('삭제 중 오류가 발생했습니다.');
+  }
+}
+
+// ═══════════════════════════════════════════
+// ── 문제 미리보기 (학생 화면과 동일하게 렌더링) ──
+// ═══════════════════════════════════════════
+
+let previewIndex = 0;
+let previewIsFullMode = false;
+
+function renderPreviewQuestion(q) {
+  document.getElementById('pv-q-num').textContent = q.num;
+  document.getElementById('pv-q-cat').textContent = q.cat;
+  document.getElementById('pv-q-text').textContent = q.text;
+
+  const setBadge = document.getElementById('pv-q-setbadge');
+  if (q.setRange) {
+    setBadge.style.display = 'inline-block';
+    setBadge.textContent = q.setRange;
+  } else {
+    setBadge.style.display = 'none';
+  }
+
+  const dataEl = document.getElementById('pv-q-data');
+  if (q.data) {
+    dataEl.style.display = 'block';
+    dataEl.innerHTML = q.data;
+  } else {
+    dataEl.style.display = 'none';
+  }
+
+  const choicesEl = document.getElementById('pv-choices');
+  const choices = q.choices || [];
+  choicesEl.innerHTML = choices.map((c, i) => `
+    <div class="pv-choice">
+      <div class="pv-choice-num">${i + 1}</div>
+      <span>${c}</span>
+    </div>
+  `).join('');
+}
+
+function previewQuestion(id) {
+  const q = allQuestions.find(x => x.id === id);
+  if (!q) return;
+  previewIsFullMode = false;
+  document.getElementById('preview-label').textContent = '학생 화면 미리보기';
+  document.getElementById('preview-nav').style.display = 'none';
+  renderPreviewQuestion(q);
+  document.getElementById('preview-overlay').classList.add('open');
+}
+
+function openFullPreview() {
+  if (allQuestions.length === 0) {
+    alert('등록된 문제가 없습니다. 먼저 문제를 추가해 주세요.');
+    return;
+  }
+  previewIsFullMode = true;
+  previewIndex = 0;
+  document.getElementById('preview-label').textContent = '학생 화면 미리보기 (전체 시험)';
+  document.getElementById('preview-nav').style.display = 'flex';
+  renderFullPreview();
+  document.getElementById('preview-overlay').classList.add('open');
+}
+
+function renderFullPreview() {
+  const q = allQuestions[previewIndex];
+  renderPreviewQuestion(q);
+  document.getElementById('preview-nav-label').textContent = `${previewIndex + 1} / ${allQuestions.length}`;
+}
+
+function previewNav(dir) {
+  const next = previewIndex + dir;
+  if (next < 0 || next >= allQuestions.length) return;
+  previewIndex = next;
+  renderFullPreview();
+}
+
+function closePreview() {
+  document.getElementById('preview-overlay').classList.remove('open');
+}
+</script>
+</body>
+</html>

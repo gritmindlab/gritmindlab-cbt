@@ -706,10 +706,10 @@
     </div>
 
     <div class="pv-question-card">
+      <div id="pv-q-setbanner" style="display:none;width:100%;box-sizing:border-box;background:#eef1f5;color:#1a3a5c;font-weight:700;font-size:.85rem;text-align:center;padding:9px 14px;border-radius:8px;margin-bottom:1rem;"></div>
       <div class="pv-q-meta">
         <div class="pv-q-num" id="pv-q-num">1</div>
         <div class="pv-q-category" id="pv-q-cat">영역</div>
-        <div id="pv-q-setbadge" style="display:none;font-size:.75rem;background:#eef1f5;color:#6b7a8d;border-radius:20px;padding:3px 10px;font-weight:700;"></div>
       </div>
       <div class="pv-q-text" id="pv-q-text"></div>
       <div class="pv-q-data" id="pv-q-data" style="display:none;"></div>
@@ -1627,10 +1627,10 @@ function renderPreviewQuestion(q) {
   document.getElementById('pv-q-cat').textContent = q.cat;
   document.getElementById('pv-q-text').textContent = q.text;
 
-  const setBadge = document.getElementById('pv-q-setbadge');
+  const setBadge = document.getElementById('pv-q-setbanner');
   if (q.setRange) {
-    setBadge.style.display = 'inline-block';
-    setBadge.textContent = q.setRange;
+    setBadge.style.display = 'block';
+    setBadge.textContent = `📎 ${q.setRange}`;
   } else {
     setBadge.style.display = 'none';
   }

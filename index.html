@@ -378,10 +378,10 @@
 
     <!-- 문제 카드 -->
     <div class="question-card">
+      <div id="q-setbanner" style="display:none;width:100%;box-sizing:border-box;background:#eef1f5;color:#1a3a5c;font-weight:700;font-size:.85rem;text-align:center;padding:9px 14px;border-radius:8px;margin-bottom:1rem;"></div>
       <div class="q-meta">
         <div class="q-num" id="q-num">1</div>
         <div class="q-category" id="q-cat">수리능력</div>
-        <div id="q-setbadge" style="display:none;font-size:.75rem;background:#eef1f5;color:#6b7a8d;border-radius:20px;padding:3px 10px;font-weight:700;"></div>
       </div>
       <div class="q-text" id="q-text"></div>
       <div class="q-data" id="q-data"></div>
@@ -623,10 +623,10 @@ function renderQ(idx) {
   document.getElementById('q-cat').textContent = q.cat;
   document.getElementById('q-text').textContent = q.text;
 
-  const setBadge = document.getElementById('q-setbadge');
+  const setBadge = document.getElementById('q-setbanner');
   if (q.setRange) {
-    setBadge.style.display = 'inline-block';
-    setBadge.textContent = q.setRange;
+    setBadge.style.display = 'block';
+    setBadge.textContent = `📎 ${q.setRange}`;
   } else {
     setBadge.style.display = 'none';
   }

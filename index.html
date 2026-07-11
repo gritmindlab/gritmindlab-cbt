@@ -6,7 +6,7 @@
   <title>NCS CBT 모의고사</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, orderBy, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCMXRmSlgfchAMvNaLrh-VzvtsaT8zcF48",
@@ -21,7 +21,7 @@
     try {
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
-      window.__firebase = { db, collection, addDoc, serverTimestamp, getDocs, query, orderBy, where, ready: true };
+      window.__firebase = { db, collection, addDoc, serverTimestamp, getDocs, query, orderBy, where, doc, getDoc, ready: true };
       window.dispatchEvent(new Event('firebase-ready'));
     } catch (e) {
       console.error('Firebase 초기화 실패:', e);
@@ -340,7 +340,7 @@
 
     <div class="form-group">
       <label>학교명</label>
-      <input type="text" placeholder="예) 수도전기공업고등학교" id="inp-school" />
+      <input type="text" placeholder="예) OOOO고등학교" id="inp-school" />
     </div>
     <div class="row-3">
       <div class="form-group">
@@ -365,7 +365,7 @@
     </div>
     <div class="form-group">
       <label>시험 코드</label>
-      <input type="text" placeholder="강사에게 받은 코드를 입력하세요" id="inp-code" />
+      <input type="text" placeholder="시험코드를 입력하세요" id="inp-code" />
     </div>
     <button class="btn-start" id="btn-start" onclick="startExam()">시험 시작하기 →</button>
     <div style="font-size:.78rem;color:#e63946;text-align:center;margin-top:.6rem;display:none;" id="start-error"></div>
@@ -498,6 +498,39 @@ async function startExam() {
     btn.disabled = false;
     btn.textContent = '시험 시작하기 →';
     return;
+  }
+
+  try {
+    const { db, doc, getDoc } = window.__firebase;
+    const examSnap = await getDoc(doc(db, "exams", code));
+    if (examSnap.exists()) {
+      const exam = examSnap.data();
+      const now = new Date();
+      if (exam.openAt) {
+        const openAt = new Date(exam.openAt);
+        if (now < openAt) {
+          errorEl.textContent = `아직 시작 전인 시험입니다. 시작 예정: ${openAt.toLocaleString('ko-KR')}`;
+          errorEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = '시험 시작하기 →';
+          return;
+        }
+      }
+      if (exam.closeAt) {
+        const closeAt = new Date(exam.closeAt);
+        if (now > closeAt) {
+          errorEl.textContent = '종료된 시험입니다.';
+          errorEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = '시험 시작하기 →';
+          return;
+        }
+      }
+    }
+    // exams 문서가 없으면(오픈/마감을 아직 설정하지 않은 시험) 별도 제한 없이 진행
+  } catch (e) {
+    console.error(e);
+    // 일정 확인에 실패해도 시험 자체는 진행할 수 있도록 함
   }
 
   try {

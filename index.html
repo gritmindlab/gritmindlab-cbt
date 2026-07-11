@@ -534,12 +534,12 @@ async function startExam() {
   }
 
   try {
-    const { db, collection, getDocs, query, orderBy, where } = window.__firebase;
-    const q = query(collection(db, "questions"), where("examCode", "==", code), orderBy("num", "asc"));
-    const snap = await getDocs(q);
+    const { db, collection, getDocs } = window.__firebase;
+    const snap = await getDocs(collection(db, "questions"));
     questions = [];
     snap.forEach(d => {
       const data = d.data();
+      if ((data.examCode || '') !== code) return;
       questions.push({
         num: data.num,
         cat: data.cat,
@@ -549,6 +549,7 @@ async function startExam() {
         choices: data.choices || []
       });
     });
+    questions.sort((a, b) => (a.num || 0) - (b.num || 0));
 
     if (questions.length === 0) {
       errorEl.textContent = '시험 코드가 올바르지 않습니다.';

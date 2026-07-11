@@ -1088,6 +1088,7 @@ function renderExamSidebar() {
             <div style="font-weight:700;word-break:break-all;">${name}</div>
             <div style="font-size:.72rem;opacity:.75;word-break:break-all;">코드: ${code}</div>
           </div>
+          <span onclick="event.stopPropagation();renameExamCode('${code.replace(/'/g, "\\'")}')" style="opacity:.6;cursor:pointer;flex-shrink:0;" title="시험 이름 수정">✏️</span>
           <span onclick="event.stopPropagation();removeExamCode('${code.replace(/'/g, "\\'")}')" style="opacity:.6;cursor:pointer;flex-shrink:0;" title="목록에서 제거(문제는 안 지워짐)">✕</span>
         </div>
       </div>`;
@@ -1107,6 +1108,29 @@ function selectExam(code) {
   currentExamCode = code;
   renderExamSidebar();
   resetForm();
+}
+
+function renameExamCode(code) {
+  const currentName = examNames[code] || code;
+  const newName = prompt('새 시험 이름을 입력하세요.', currentName);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed) return;
+
+  examNames[code] = trimmed;
+  saveExamNames();
+  renderExamSidebar();
+
+  // Firestore에 오픈/마감 일정이 등록되어 있으면 이름도 함께 갱신
+  if (examSchedules[code]) {
+    waitFirebaseQ().then(ok => {
+      if (!ok) return;
+      const { db, doc, setDoc, serverTimestamp } = window.__firebase;
+      setDoc(doc(db, "exams", code), { name: trimmed, updatedAt: serverTimestamp() }, { merge: true })
+        .then(() => { examSchedules[code].name = trimmed; })
+        .catch(e => console.error(e));
+    });
+  }
 }
 
 function removeExamCode(code) {

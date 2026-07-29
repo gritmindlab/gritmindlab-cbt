@@ -6,7 +6,8 @@
   <title>NCS CBT 모의고사</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, orderBy, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, serverTimestamp, getDocs, query, orderBy, where, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCMXRmSlgfchAMvNaLrh-VzvtsaT8zcF48",
@@ -21,7 +22,23 @@
     try {
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
-      window.__firebase = { db, collection, addDoc, serverTimestamp, getDocs, query, orderBy, where, doc, getDoc, ready: true };
+      const auth = getAuth(app);
+      const ensureAnonymousUser = async () => {
+        const existingUser = await new Promise((resolve, reject) => {
+          let unsubscribe = () => {};
+          unsubscribe = onAuthStateChanged(auth, user => {
+            unsubscribe();
+            resolve(user);
+          }, reject);
+        });
+        if (existingUser) return existingUser;
+        const credential = await signInAnonymously(auth);
+        return credential.user;
+      };
+      window.__firebase = {
+        db, auth, ensureAnonymousUser, collection, serverTimestamp, getDocs, query,
+        orderBy, where, doc, getDoc, setDoc, ready: true
+      };
       window.dispatchEvent(new Event('firebase-ready'));
     } catch (e) {
       console.error('Firebase 초기화 실패:', e);
@@ -436,6 +453,7 @@
         <div class="progress-bar">
           <div class="progress-fill" id="progress-fill" style="width:0%"></div>
         </div>
+        <div id="save-status" style="margin-top:.7rem;font-size:.75rem;color:#6b7a8d;">답안 자동저장 준비 중</div>
       </div>
 
       <div class="panel-card">
@@ -518,6 +536,62 @@ let elapsed = 0;
 let examMinutes = 60;
 let remaining = examMinutes * 60;
 let studentInfo = {};
+let currentUser = null;
+let attemptRef = null;
+let isSubmitting = false;
+let saveQueue = Promise.resolve();
+
+function valueAsDate(value) {
+  if (!value) return null;
+  if (typeof value.toDate === 'function') return value.toDate();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function localAttemptKey() {
+  if (!currentUser || !studentInfo.examCode) return null;
+  return `cbt_attempt_${currentUser.uid}_${studentInfo.examCode}`;
+}
+
+function updateSaveStatus(message, isError = false) {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? '#e63946' : '#6b7a8d';
+}
+
+function saveProgress() {
+  if (!attemptRef || isSubmitting) return;
+  const answerSnapshot = [...answers];
+  const elapsedSnapshot = Math.max(0, elapsed);
+  const key = localAttemptKey();
+  if (key) {
+    localStorage.setItem(key, JSON.stringify({
+      answers: answerSnapshot,
+      savedAt: Date.now()
+    }));
+  }
+
+  updateSaveStatus('저장 중...');
+  saveQueue = saveQueue
+    .catch(() => {})
+    .then(async () => {
+      const { setDoc, serverTimestamp } = window.__firebase;
+      await setDoc(attemptRef, {
+        answers: answerSnapshot,
+        answeredCount: answerSnapshot.filter(a => a !== -1).length,
+        elapsedSeconds: elapsedSnapshot,
+        lastSavedAt: serverTimestamp()
+      }, { merge: true });
+      updateSaveStatus('자동저장 완료');
+    })
+    .catch(error => {
+      console.error('자동저장 실패:', error);
+      updateSaveStatus('자동저장 실패 · 인터넷 연결을 확인하세요', true);
+      throw error;
+    });
+  return saveQueue;
+}
 
 async function startExam() {
   const school = document.getElementById('inp-school').value.trim();
@@ -532,6 +606,11 @@ async function startExam() {
 
   if (!school || !grade || !cls || !num || !name || !code) {
     errorEl.textContent = '모든 항목을 입력해 주세요.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (!/^[A-Za-z0-9_-]{3,40}$/.test(code)) {
+    errorEl.textContent = '시험 코드는 영문, 숫자, -, _만 입력해 주세요.';
     errorEl.style.display = 'block';
     return;
   }
@@ -557,45 +636,68 @@ async function startExam() {
   }
 
   try {
-    const { db, doc, getDoc } = window.__firebase;
-    const examSnap = await getDoc(doc(db, "exams", code));
-    if (examSnap.exists()) {
-      const exam = examSnap.data();
-      const now = new Date();
-      if (exam.openAt) {
-        const openAt = new Date(exam.openAt);
-        if (now < openAt) {
-          errorEl.textContent = `아직 시작 전인 시험입니다. 시작 예정: ${openAt.toLocaleString('ko-KR')}`;
-          errorEl.style.display = 'block';
-          btn.disabled = false;
-          btn.textContent = '시험 시작하기 →';
-          return;
-        }
-      }
-      if (exam.closeAt) {
-        const closeAt = new Date(exam.closeAt);
-        if (now > closeAt) {
-          errorEl.textContent = '종료된 시험입니다.';
-          errorEl.style.display = 'block';
-          btn.disabled = false;
-          btn.textContent = '시험 시작하기 →';
-          return;
-        }
-      }
-    }
-    // exams 문서가 없으면(오픈/마감을 아직 설정하지 않은 시험) 별도 제한 없이 진행
+    currentUser = await window.__firebase.ensureAnonymousUser();
   } catch (e) {
     console.error(e);
-    // 일정 확인에 실패해도 시험 자체는 진행할 수 있도록 함
+    errorEl.textContent = '응시자 인증에 실패했습니다. 관리자에게 문의해 주세요.';
+    errorEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '시험 시작하기 →';
+    return;
   }
 
   try {
-    const { db, collection, getDocs } = window.__firebase;
-    const snap = await getDocs(collection(db, "questions"));
+    const { db, doc, getDoc } = window.__firebase;
+    const examSnap = await getDoc(doc(db, "exams", code));
+    if (!examSnap.exists()) {
+      errorEl.textContent = '시험 코드가 올바르지 않습니다.';
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '시험 시작하기 →';
+      return;
+    }
+
+    const exam = examSnap.data();
+    const now = new Date();
+    if (exam.openAt) {
+      const openAt = valueAsDate(exam.openAt);
+      if (openAt && now < openAt) {
+        errorEl.textContent = `아직 시작 전인 시험입니다. 시작 예정: ${openAt.toLocaleString('ko-KR')}`;
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = '시험 시작하기 →';
+        return;
+      }
+    }
+    if (exam.closeAt) {
+      const closeAt = valueAsDate(exam.closeAt);
+      if (closeAt && now > closeAt) {
+        errorEl.textContent = '종료된 시험입니다.';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = '시험 시작하기 →';
+        return;
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    errorEl.textContent = '시험 정보를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+    errorEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '시험 시작하기 →';
+    return;
+  }
+
+  try {
+    const { db, collection, getDocs, query, where } = window.__firebase;
+    const questionQuery = query(
+      collection(db, "questions"),
+      where("examCode", "==", code)
+    );
+    const snap = await getDocs(questionQuery);
     questions = [];
     snap.forEach(d => {
       const data = d.data();
-      if ((data.examCode || '') !== code) return;
       questions.push({
         num: data.num,
         cat: data.cat,
@@ -631,17 +733,101 @@ async function startExam() {
     return;
   }
 
-  answers = new Array(questions.length).fill(-1);
-
   studentInfo = { school, grade, cls, num, name, examCode: code };
+  const { db, doc, getDoc, setDoc, serverTimestamp } = window.__firebase;
+  attemptRef = doc(db, 'users', currentUser.uid, 'attempts', code);
+
+  try {
+    const existingAttempt = await getDoc(attemptRef);
+    if (existingAttempt.exists() && existingAttempt.data().status === 'submitted') {
+      errorEl.textContent = '이 기기에서는 이미 제출이 완료된 시험입니다.';
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '시험 시작하기 →';
+      return;
+    }
+
+    if (existingAttempt.exists()) {
+      const saved = existingAttempt.data();
+      answers = Array.isArray(saved.answers)
+        ? saved.answers.slice(0, questions.length)
+        : new Array(questions.length).fill(-1);
+      while (answers.length < questions.length) answers.push(-1);
+      studentInfo = {
+        school: saved.school || school,
+        grade: saved.grade || grade,
+        cls: saved.class || cls,
+        num: saved.number || num,
+        name: saved.name || name,
+        examCode: code
+      };
+      const localKey = localAttemptKey();
+      const localSaved = localKey ? localStorage.getItem(localKey) : null;
+      if (localSaved) {
+        try {
+          const parsed = JSON.parse(localSaved);
+          const serverSavedAt = valueAsDate(saved.lastSavedAt)?.getTime() || 0;
+          if (
+            parsed.savedAt > serverSavedAt
+            && Array.isArray(parsed.answers)
+            && parsed.answers.length === questions.length
+          ) {
+            answers = parsed.answers;
+          }
+        } catch (error) {
+          console.warn('로컬 답안 복구 실패:', error);
+        }
+      }
+      const savedStart = valueAsDate(saved.startedAt);
+      startTime = savedStart || new Date();
+    } else {
+      answers = new Array(questions.length).fill(-1);
+      await setDoc(attemptRef, {
+        ownerUid: currentUser.uid,
+        examCode: code,
+        school,
+        grade,
+        class: cls,
+        number: num,
+        name,
+        answers,
+        answeredCount: 0,
+        totalQuestions: questions.length,
+        elapsedSeconds: 0,
+        timeUp: false,
+        status: 'inProgress',
+        startedAt: serverTimestamp(),
+        lastSavedAt: serverTimestamp()
+      });
+      const createdAttempt = await getDoc(attemptRef);
+      startTime = valueAsDate(createdAttempt.data()?.startedAt) || new Date();
+    }
+  } catch (error) {
+    console.error(error);
+    errorEl.textContent = '응시 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+    errorEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '시험 시작하기 →';
+    return;
+  }
+
+  elapsed = Math.max(0, Math.floor((new Date() - startTime) / 1000));
+  remaining = Math.max(0, examMinutes * 60 - elapsed);
+
   document.getElementById('screen-login').style.display = 'none';
   document.getElementById('screen-exam').style.display = 'block';
   document.getElementById('header-title').style.display = 'block';
   document.getElementById('timer').style.visibility = 'visible';
 
-  startTime = new Date();
   buildGrid();
   renderQ(0);
+  document.getElementById('timer').textContent =
+    `${Math.floor(remaining / 60).toString().padStart(2, '0')}:${(remaining % 60).toString().padStart(2, '0')}`;
+  updateSaveStatus('자동저장 완료');
+  if (remaining <= 0) {
+    submitExam(true);
+    return;
+  }
   timerInterval = setInterval(tickTimer, 1000);
 }
 
@@ -724,6 +910,7 @@ function renderQ(idx) {
 function selectChoice(qIdx, choiceIdx) {
   answers[qIdx] = choiceIdx;
   renderQ(qIdx);
+  saveProgress();
 }
 
 function goQ(dir) {
@@ -739,12 +926,14 @@ function updateProgress() {
 }
 
 async function submitExam(timeUp) {
+  if (isSubmitting) return;
   if (!timeUp) {
     const unanswered = answers.filter(a => a === -1).length;
     if (unanswered > 0) {
       if (!confirm(`아직 ${unanswered}문제에 답하지 않았습니다. 그래도 제출하시겠습니까?`)) return;
     }
   }
+  isSubmitting = true;
   clearInterval(timerInterval);
 
   const elapsedSec = Math.floor((new Date() - startTime) / 1000);
@@ -765,24 +954,25 @@ async function submitExam(timeUp) {
       throw new Error('Firebase 연결 준비가 되지 않았습니다. 인터넷 연결을 확인하거나 페이지를 새로고침 후 다시 시도해 주세요.');
     }
 
-    const { db, collection, addDoc, serverTimestamp } = window.__firebase;
-    await addDoc(collection(db, "submissions"), {
-      examCode: studentInfo.examCode,
-      school: studentInfo.school,
-      grade: studentInfo.grade,
-      class: studentInfo.cls,
-      number: studentInfo.num,
-      name: studentInfo.name,
+    await saveQueue.catch(() => {});
+    const { setDoc, serverTimestamp } = window.__firebase;
+    await setDoc(attemptRef, {
       answers: answers,                 // 문제별 선택한 보기 (0~4, -1은 미응답)
       answeredCount: answers.filter(a => a !== -1).length,
       totalQuestions: questions.length,
       elapsedSeconds: elapsedSec,
       timeUp: !!timeUp,
+      status: 'submitted',
+      lastSavedAt: serverTimestamp(),
       submittedAt: serverTimestamp()
-    });
+    }, { merge: true });
+    const key = localAttemptKey();
+    if (key) localStorage.removeItem(key);
   } catch (e) {
     console.error("저장 실패:", e);
     alert("제출 중 오류가 발생했습니다: " + e.message + "\n네트워크를 확인하고 다시 시도해 주세요.");
+    isSubmitting = false;
+    if (!timeUp) timerInterval = setInterval(tickTimer, 1000);
     return;
   }
 

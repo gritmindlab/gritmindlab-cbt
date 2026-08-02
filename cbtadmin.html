@@ -566,7 +566,7 @@
 
     <!-- 툴바 -->
     <div class="toolbar">
-      <input type="text" class="search-box" id="search-input" placeholder="이름, 학교로 검색..." oninput="renderTable()" />
+      <input type="text" class="search-box" id="search-input" placeholder="이름, 학교, 학과, 학년, 학번으로 검색..." oninput="renderTable()" />
       <select id="filter-school" onchange="renderTable()">
         <option value="">전체 학교</option>
       </select>
@@ -579,7 +579,7 @@
         <thead>
           <tr>
             <th onclick="sortBy('school')">학교 <span class="arrow" id="arrow-school"></span></th>
-            <th onclick="sortBy('grade')">학년·반·번호 <span class="arrow" id="arrow-grade"></span></th>
+            <th onclick="sortBy('department')">학과·학년·학번 <span class="arrow" id="arrow-department"></span></th>
             <th onclick="sortBy('name')">이름 <span class="arrow" id="arrow-name"></span></th>
             <th onclick="sortBy('score')">점수 <span class="arrow" id="arrow-score"></span></th>
             <th onclick="sortBy('answeredCount')">응답률 <span class="arrow" id="arrow-answeredCount"></span></th>
@@ -942,9 +942,9 @@ function submissionFromDoc(documentSnapshot) {
     id: documentSnapshot.ref.path,
     examCode: d.examCode || documentSnapshot.id || '',
     school: d.school || '-',
+    department: d.department || d.class || '-',
     grade: d.grade || '-',
-    cls: d.class || '-',
-    number: d.number || '-',
+    studentId: d.studentId || d.number || '-',
     name: d.name || '-',
     answers: d.answers || [],
     answeredCount: d.answeredCount ?? 0,
@@ -1047,7 +1047,12 @@ function getFiltered() {
   const schoolFilter = document.getElementById('filter-school').value;
   let list = allSubmissions.filter(s => {
     const matchExam = !currentExamCode || s.examCode === currentExamCode;
-    const matchSearch = !searchTerm || s.name.toLowerCase().includes(searchTerm) || s.school.toLowerCase().includes(searchTerm);
+    const matchSearch = !searchTerm
+      || s.name.toLowerCase().includes(searchTerm)
+      || s.school.toLowerCase().includes(searchTerm)
+      || s.department.toLowerCase().includes(searchTerm)
+      || s.grade.toLowerCase().includes(searchTerm)
+      || s.studentId.toLowerCase().includes(searchTerm);
     const matchSchool = !schoolFilter || s.school === schoolFilter;
     return matchExam && matchSearch && matchSchool;
   });
@@ -1067,7 +1072,7 @@ function getFiltered() {
 
 function renderTable() {
   // 정렬 화살표 갱신
-  ['school','grade','name','score','answeredCount','elapsedSeconds','submittedAt'].forEach(k => {
+  ['school','department','name','score','answeredCount','elapsedSeconds','submittedAt'].forEach(k => {
     const el = document.getElementById('arrow-' + k);
     if (!el) return;
     el.textContent = sortKey === k ? (sortDir === 'asc' ? '▲' : '▼') : '';
@@ -1096,7 +1101,7 @@ function renderTable() {
     return `
       <tr onclick="openModal('${s.id}')">
         <td>${escapeHtml(s.school)}</td>
-        <td>${escapeHtml(s.grade)} ${escapeHtml(s.cls)}반 ${escapeHtml(s.number)}번</td>
+        <td>${escapeHtml(s.department)} · ${escapeHtml(s.grade)} · ${escapeHtml(s.studentId)}</td>
         <td>${escapeHtml(s.name)}</td>
         <td><span class="score-badge ${scoreClass}">${s.score}점</span></td>
         <td>${s.answeredCount}/${s.totalQuestions}</td>
@@ -1110,7 +1115,7 @@ function renderTable() {
 function openModal(id) {
   const s = allSubmissions.find(x => x.id === id);
   if (!s) return;
-  document.getElementById('modal-name').textContent = `${s.name} (${s.school} ${s.grade} ${s.cls}반 ${s.number}번)`;
+  document.getElementById('modal-name').textContent = `${s.name} (${s.school} · ${s.department} · ${s.grade} · ${s.studentId})`;
   const em = Math.floor(s.elapsedSeconds / 60), es = s.elapsedSeconds % 60;
   document.getElementById('modal-sub').textContent = `소요시간 ${em}분 ${es}초 · 응답 ${s.answeredCount}/${s.totalQuestions} · ${s.timeUp ? '시간초과 자동제출' : '정상 제출'}`;
 
@@ -1147,9 +1152,9 @@ function exportCSV() {
   const list = getFiltered();
   if (list.length === 0) { alert('내보낼 데이터가 없습니다.'); return; }
 
-  const headers = ['학교','학년','반','번호','이름','점수','정답수','응답수','전체문항','소요시간(초)','시간초과','제출일시'];
+  const headers = ['학교','학과','학년','학번','이름','점수','정답수','응답수','전체문항','소요시간(초)','시간초과','제출일시'];
   const rows = list.map(s => [
-    s.school, s.grade, s.cls, s.number, s.name,
+    s.school, s.department, s.grade, s.studentId, s.name,
     s.score, correctCountOf(s.answers, s.examCode), s.answeredCount, s.totalQuestions,
     s.elapsedSeconds, s.timeUp ? 'Y' : 'N',
     s.submittedAt ? s.submittedAt.toLocaleString('ko-KR') : '-'

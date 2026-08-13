@@ -606,7 +606,7 @@
         <div style="font-size:.8rem;color:#6b7a8d;margin-bottom:.5rem;">현재 시험: <strong id="current-exam-label" style="color:#1a3a5c;">-</strong></div>
         <div style="font-size:.78rem;color:#8a97a8;margin-bottom:1rem;" id="current-exam-schedule">오픈/마감 미설정</div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.3rem;">
-          <button type="button" class="exam-add-btn" style="width:auto;padding:8px 14px;font-size:.78rem;background:#1a3a5c;color:#fff;border:none;" onclick="openScheduleModal()">🕒 오픈/마감 설정</button>
+          <button type="button" class="exam-add-btn" style="width:auto;padding:8px 14px;font-size:.78rem;background:#1a3a5c;color:#fff;border:none;" onclick="openScheduleModal()">🕒 오픈/마감/응시시간 설정</button>
           <button type="button" class="exam-add-btn" style="width:auto;padding:8px 14px;font-size:.78rem;background:#2a6f4b;color:#fff;border:none;" onclick="openImportModal()">📥 다른 시험에서 문제 가져오기</button>
         </div>
         <input type="hidden" id="qf-editing-id" value="" />
@@ -730,10 +730,10 @@
   </div>
 </div>
 
-<!-- ── 오픈/마감 설정 모달 ── -->
+<!-- ── 오픈/마감/응시시간 설정 모달 ── -->
 <div class="modal-overlay" id="schedule-modal-overlay" onclick="if(event.target===this)closeScheduleModal()">
   <div class="modal-card" style="max-width:460px;">
-    <h3>🕒 오픈/마감 설정</h3>
+    <h3>🕒 오픈/마감/응시시간 설정</h3>
     <div class="modal-sub" id="schedule-modal-exam-name">-</div>
     <div class="form-row">
       <label>오픈 일시 (비우면 즉시 오픈)</label>
@@ -742,6 +742,10 @@
     <div class="form-row" style="margin-top:.8rem;">
       <label>마감 일시 (비우면 마감 없음)</label>
       <input type="datetime-local" id="sch-close" style="width:100%;padding:9px 12px;border:1.5px solid #d1d9e6;border-radius:8px;font-family:inherit;" />
+    </div>
+    <div class="form-row" style="margin-top:.8rem;">
+      <label>응시 시간 (분 단위, 비우면 기본 60분)</label>
+      <input type="number" id="sch-duration" min="1" max="480" placeholder="예) 60" style="width:100%;padding:9px 12px;border:1.5px solid #d1d9e6;border-radius:8px;font-family:inherit;" />
     </div>
     <div style="margin-top:1.3rem;">
       <button type="button" class="exam-add-btn" style="width:auto;padding:9px 16px;background:#1a3a5c;color:#fff;border:none;" onclick="saveSchedule()">저장</button>
@@ -1311,12 +1315,14 @@ async function addNewExam() {
     name: trimmedName,
     openAt: null,
     closeAt: null,
+    durationMinutes: 60,
     updatedAt: serverTimestamp()
   }, { merge: true });
   examSchedules[trimmed] = {
     name: trimmedName,
     openAt: null,
-    closeAt: null
+    closeAt: null,
+    durationMinutes: 60
   };
 
   renderExamSidebar();
@@ -1325,10 +1331,10 @@ async function addNewExam() {
 }
 
 // ═══════════════════════════════════════════
-// ── 오픈/마감 일시 설정 (Firestore "exams" 컬렉션) ──
+// ── 오픈/마감/응시시간 설정 (Firestore "exams" 컬렉션) ──
 // ═══════════════════════════════════════════
 
-let examSchedules = {}; // { code: { name, openAt, closeAt } }
+let examSchedules = {}; // { code: { name, openAt, closeAt, durationMinutes } }
 
 async function loadExamSchedules() {
   const ok = await waitFirebaseQ();
@@ -1365,12 +1371,13 @@ function updateScheduleLabel() {
   if (!el) return;
   if (!currentExamCode) { el.textContent = '오픈/마감 미설정'; return; }
   const sch = examSchedules[currentExamCode];
-  if (!sch) { el.textContent = '오픈/마감 미설정 (즉시 오픈, 마감 없음)'; return; }
+  if (!sch) { el.textContent = '오픈/마감 미설정 (즉시 오픈, 마감 없음) · 응시시간 60분(기본값)'; return; }
   const open = fmtDt(sch.openAt);
   const close = fmtDt(sch.closeAt);
   const openStr = open ? open.toLocaleString('ko-KR') : '즉시 오픈';
   const closeStr = close ? close.toLocaleString('ko-KR') : '마감 없음';
-  el.textContent = `오픈: ${openStr} · 마감: ${closeStr}`;
+  const durationStr = sch.durationMinutes ? `${sch.durationMinutes}분` : '60분(기본값)';
+  el.textContent = `오픈: ${openStr} · 마감: ${closeStr} · 응시시간: ${durationStr}`;
 }
 
 function openScheduleModal() {
@@ -1380,6 +1387,7 @@ function openScheduleModal() {
   const sch = examSchedules[currentExamCode] || {};
   document.getElementById('sch-open').value = toDatetimeLocalValue(sch.openAt);
   document.getElementById('sch-close').value = toDatetimeLocalValue(sch.closeAt);
+  document.getElementById('sch-duration').value = sch.durationMinutes || '';
   document.getElementById('schedule-status').textContent = '';
   document.getElementById('schedule-modal-overlay').classList.add('open');
 }
@@ -1392,11 +1400,23 @@ async function saveSchedule() {
   const statusEl = document.getElementById('schedule-status');
   const openVal = document.getElementById('sch-open').value;
   const closeVal = document.getElementById('sch-close').value;
+  const durationVal = document.getElementById('sch-duration').value;
 
   if (openVal && closeVal && new Date(closeVal) <= new Date(openVal)) {
     statusEl.style.color = '#e63946';
     statusEl.textContent = '마감 일시는 오픈 일시보다 나중이어야 해요.';
     return;
+  }
+
+  let durationMinutes = 60;
+  if (durationVal !== '') {
+    const parsed = parseInt(durationVal, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 480) {
+      statusEl.style.color = '#e63946';
+      statusEl.textContent = '응시 시간은 1~480분 사이 숫자로 입력해 주세요.';
+      return;
+    }
+    durationMinutes = parsed;
   }
 
   const ok = await waitFirebaseQ();
@@ -1410,13 +1430,15 @@ async function saveSchedule() {
       name: examNames[currentExamCode] || currentExamCode,
       openAt,
       closeAt,
+      durationMinutes,
       updatedAt: serverTimestamp()
     }, { merge: true });
 
     examSchedules[currentExamCode] = {
       name: examNames[currentExamCode] || currentExamCode,
       openAt,
-      closeAt
+      closeAt,
+      durationMinutes
     };
     updateScheduleLabel();
     statusEl.style.color = '#2a6f4b';

@@ -771,9 +771,9 @@ async function startExam() {
       while (answers.length < questions.length) answers.push(-1);
       studentInfo = {
         school: saved.school || school,
-        department: saved.department || saved.class || department,
+        department: saved.class || department,
         grade: saved.grade || grade,
-        studentId: saved.studentId || saved.number || studentId,
+        studentId: saved.number || studentId,
         name: saved.name || name,
         examCode: code
       };
@@ -798,12 +798,17 @@ async function startExam() {
       startTime = savedStart || new Date();
     } else {
       answers = new Array(questions.length).fill(-1);
+      // ── Firestore 보안 규칙(rules)의 validAttemptCreate()는 다음 15개 필드만
+      // 정확히(hasOnly) 허용합니다: ownerUid, examCode, school, grade, class,
+      // number, name, answers, answeredCount, totalQuestions, elapsedSeconds,
+      // timeUp, status, startedAt, lastSavedAt.
+      // 이전에는 department/studentId를 추가로 함께 보내서 hasOnly 조건에 걸려
+      // "Missing or insufficient permissions" 오류가 발생했습니다.
+      // → department는 class로, studentId는 number로만 저장합니다.
       await setDoc(attemptRef, {
         ownerUid: currentUser.uid,
         examCode: code,
         school,
-        department,
-        studentId,
         grade,
         class: department,
         number: studentId,

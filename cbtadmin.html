@@ -496,6 +496,143 @@
       display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: .82rem; flex-shrink: 0;
     }
+
+    /* ── 영역별 점수 배지 ── */
+    .domain-score-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: .5rem;
+      margin: .8rem 0 1.1rem;
+    }
+    .domain-score-item {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: .78rem;
+    }
+    .domain-score-item .ds-name { font-weight: 700; color: #44546b; margin-bottom: 2px; }
+    .domain-score-item .ds-val { font-size: .95rem; font-weight: 700; }
+    .domain-score-item .ds-val.full { color: #2a6f4b; }
+    .domain-score-item .ds-val.zero { color: #e63946; }
+    .domain-score-item .ds-val.partial { color: #b8740a; }
+
+    /* ── 휴지통 탭 ── */
+    .trash-actions button {
+      background: none;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 7px;
+      padding: 4px 10px;
+      font-size: .76rem;
+      cursor: pointer;
+      font-family: inherit;
+      color: #44546b;
+      margin-right: 4px;
+    }
+    .trash-actions button:hover { background: #f7f9fc; }
+    .trash-actions button.restore { color: #2a6f4b; border-color: #bfe3cb; }
+    .trash-actions button.permanent { color: #e63946; border-color: #f3c5c8; }
+    .row-trash-btn {
+      background: none;
+      border: 1.5px solid #f3c5c8;
+      color: #e63946;
+      border-radius: 7px;
+      padding: 4px 9px;
+      font-size: .74rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .row-trash-btn:hover { background: #fef4f4; }
+
+    /* ── 개별 성적표(인쇄/PDF 저장용) ──
+       화면에서는 숨겨져 있다가, "성적표 다운로드" 클릭 시 내용을 채우고
+       인쇄 모드에서만 이 영역만 보이도록 전환한다. */
+    #score-report { display: none; }
+    @media print {
+      body.printing-report * { visibility: hidden; }
+      body.printing-report #score-report,
+      body.printing-report #score-report * { visibility: visible; }
+      body.printing-report #score-report {
+        display: block !important;
+        position: absolute; inset: 0; background: #fff; padding: 28px 34px;
+      }
+    }
+    .rp-header {
+      text-align: center;
+      border-bottom: 3px solid #1a3a5c;
+      padding-bottom: .9rem;
+      margin-bottom: 1.2rem;
+    }
+    .rp-header .rp-title { font-size: 1.35rem; font-weight: 700; color: #1a3a5c; }
+    .rp-header .rp-sub { font-size: .82rem; color: #6b7a8d; margin-top: .35rem; }
+    .rp-student-line {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: .88rem; color: #44546b; margin-bottom: 1.2rem;
+      border-bottom: 1px solid #e2e8f0; padding-bottom: .7rem;
+    }
+    .rp-student-line b { color: #1a2332; font-size: 1rem; }
+
+    .rp-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: .7rem;
+      margin-bottom: 1.3rem;
+    }
+    .rp-stat-card {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: .7rem .5rem;
+      text-align: center;
+    }
+    .rp-stat-card .rp-stat-label { font-size: .7rem; color: #6b7a8d; margin-bottom: .3rem; }
+    .rp-stat-card .rp-stat-value { font-size: 1.25rem; font-weight: 700; color: #1a3a5c; }
+    .rp-stat-card .rp-stat-value.accent { color: #2a6f4b; }
+    .rp-stat-card .rp-stat-sub { font-size: .68rem; color: #aab4c2; margin-top: .15rem; }
+
+    .rp-section-title {
+      font-size: .88rem; font-weight: 700; color: #1a3a5c;
+      margin: 1.1rem 0 .6rem; padding-left: .5rem; border-left: 4px solid #1a3a5c;
+    }
+
+    .rp-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; align-items: start; }
+    .rp-radar-wrap { display: flex; justify-content: center; align-items: center; }
+
+    .rp-domain-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .rp-domain-table th {
+      background: #f7f9fc; color: #44546b; text-align: left; padding: 6px 8px;
+      border-bottom: 1.5px solid #e2e8f0; font-weight: 700;
+    }
+    .rp-domain-table td { padding: 6px 8px; border-bottom: 1px solid #eef1f5; }
+    .rp-domain-table .risk-tag {
+      font-size: .68rem; font-weight: 700; color: #e63946;
+      background: #fde8e9; border-radius: 10px; padding: 1px 7px;
+    }
+
+    .rp-risk-box {
+      border: 1.5px solid #f3c5c8; background: #fef4f4; border-radius: 10px;
+      padding: .7rem .9rem; margin: .7rem 0 1.1rem; font-size: .8rem; color: #c1121f;
+    }
+    .rp-risk-box.safe { border-color: #bfe3cb; background: #f3faf5; color: #2a6f4b; }
+    .rp-risk-box b { display:block; font-size:.72rem; margin-bottom:.2rem; opacity:.85; }
+
+    .rp-compare-row { display: flex; align-items: center; gap: .7rem; margin-bottom: .55rem; font-size: .8rem; }
+    .rp-compare-row .rp-compare-label { width: 108px; flex-shrink: 0; color: #44546b; font-weight: 700; }
+    .rp-compare-row .rp-compare-track {
+      flex: 1; background: #eef1f5; border-radius: 6px; height: 16px; position: relative; overflow: hidden;
+    }
+    .rp-compare-row .rp-compare-fill {
+      height: 100%; border-radius: 6px; background: #1a3a5c;
+    }
+    .rp-compare-row.me .rp-compare-fill { background: #e0762a; }
+    .rp-compare-row .rp-compare-value { width: 46px; flex-shrink: 0; text-align: right; font-weight: 700; color: #1a2332; }
+
+    .rp-footer-note { font-size: .68rem; color: #aab4c2; margin-top: 1.4rem; text-align: right; }
+
+    .rp-answer-grid {
+      grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)) !important;
+      gap: .4rem !important;
+    }
+    .rp-answer-grid .answer-item { padding: 6px 8px; font-size: .72rem; }
+    .rp-answer-grid .answer-item .qn { margin-bottom: 1px; }
   </style>
 </head>
 <body>
@@ -535,6 +672,7 @@
     <div class="tabs">
       <button class="tab-btn active" id="tab-btn-submissions" onclick="switchTab('submissions')">📋 제출 현황</button>
       <button class="tab-btn" id="tab-btn-questions" onclick="switchTab('questions')">📝 문제 관리</button>
+      <button class="tab-btn" id="tab-btn-trash" onclick="switchTab('trash')">🗑 휴지통</button>
     </div>
 
     <!-- ══════════ 탭 1: 제출 현황 ══════════ -->
@@ -585,6 +723,7 @@
             <th onclick="sortBy('answeredCount')">응답률 <span class="arrow" id="arrow-answeredCount"></span></th>
             <th onclick="sortBy('elapsedSeconds')">소요시간 <span class="arrow" id="arrow-elapsedSeconds"></span></th>
             <th onclick="sortBy('submittedAt')">제출일시 <span class="arrow" id="arrow-submittedAt"></span></th>
+            <th>관리</th>
           </tr>
         </thead>
         <tbody id="table-body"></tbody>
@@ -700,6 +839,34 @@
     </div>
     <!-- ══════════ /탭 2 ══════════ -->
 
+    <!-- ══════════ 탭 3: 휴지통 ══════════ -->
+    <div class="tab-panel" id="tab-panel-trash">
+      <div style="font-size:.82rem;color:#6b7a8d;margin-bottom:1rem;">
+        휴지통으로 보낸 응시자 데이터입니다. 실수로 지운 경우 "복구"를 누르면 제출 현황 목록으로 되돌아가요. "영구 삭제"는 되돌릴 수 없어요.
+      </div>
+      <div class="table-wrap">
+        <table id="trash-table">
+          <thead>
+            <tr>
+              <th>학교</th>
+              <th>학과·학년·학번</th>
+              <th>이름</th>
+              <th>점수</th>
+              <th>제출일시</th>
+              <th>휴지통 이동일시</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="trash-table-body"></tbody>
+        </table>
+        <div class="empty-state" id="trash-empty-state" style="display:none;">
+          <div class="icon">🗑</div>
+          <div>휴지통이 비어있습니다.</div>
+        </div>
+      </div>
+    </div>
+    <!-- ══════════ /탭 3 ══════════ -->
+
     </div>
   </div>
 </div>
@@ -785,17 +952,27 @@
     <h3 id="modal-name">-</h3>
     <div class="modal-sub" id="modal-sub">-</div>
     <div id="modal-score-line"></div>
+    <div id="modal-domain-scores"></div>
+    <div style="margin:.6rem 0 1rem;">
+      <button class="btn-save" id="modal-report-btn" style="background:#2a6f4b;font-size:.82rem;padding:8px 16px;" onclick="printReport()">🖨 성적표 다운로드(PDF)</button>
+      <button class="btn-save" id="modal-trash-btn" style="background:#e63946;font-size:.82rem;padding:8px 16px;margin-left:.4rem;" onclick="trashCurrentSubmission()">🗑 휴지통으로 이동</button>
+    </div>
     <div class="answer-grid" id="modal-answers"></div>
   </div>
 </div>
+
+<!-- ── 개별 성적표(인쇄 전용, 평소엔 화면에 안 보임) ── -->
+<div id="score-report"></div>
 
 <script>
 const ADMIN_UID = 'JthoH29VM2RbWGpUm1nJTuxZTcv2';
 
 let allSubmissions = [];
+let allTrashedSubmissions = [];
 let sortKey = 'submittedAt';
 let sortDir = 'desc';
 let adminInitialized = false;
+let currentModalSubmissionId = '';
 
 function showAdminScreen() {
   if (!adminInitialized) {
@@ -896,8 +1073,11 @@ async function migrateLegacyAnswers() {
 function switchTab(tab) {
   document.getElementById('tab-btn-submissions').classList.toggle('active', tab === 'submissions');
   document.getElementById('tab-btn-questions').classList.toggle('active', tab === 'questions');
+  document.getElementById('tab-btn-trash').classList.toggle('active', tab === 'trash');
   document.getElementById('tab-panel-submissions').classList.toggle('active', tab === 'submissions');
   document.getElementById('tab-panel-questions').classList.toggle('active', tab === 'questions');
+  document.getElementById('tab-panel-trash').classList.toggle('active', tab === 'trash');
+  if (tab === 'trash') renderTrashTable();
 }
 
 function questionsForExam(examCode) {
@@ -922,6 +1102,22 @@ function correctCountOf(answers, examCode) {
     if (q.answer !== undefined && q.answer !== null && answers[i] === q.answer) correct++;
   });
   return correct;
+}
+
+// ── 영역별 점수 집계 ──
+// 문제마다 이미 있는 cat(영역) 필드를 기준으로, 응시자의 답안을 영역별로 묶어서
+// 정답수/전체문항수를 계산한다. 시험에 실제로 등장하는 영역만, 문제 등록 순서 기준으로 반환.
+function scoreByDomain(answers, examCode) {
+  const qs = questionsForExam(examCode);
+  const order = [];
+  const stats = {};
+  qs.forEach((q, i) => {
+    const cat = q.cat || '기타';
+    if (!stats[cat]) { stats[cat] = { correct: 0, total: 0 }; order.push(cat); }
+    stats[cat].total++;
+    if (q.answer !== undefined && q.answer !== null && answers[i] === q.answer) stats[cat].correct++;
+  });
+  return order.map(cat => ({ domain: cat, ...stats[cat] }));
 }
 
 function asDate(value) {
@@ -956,13 +1152,14 @@ function submissionFromDoc(documentSnapshot) {
     elapsedSeconds: d.elapsedSeconds ?? 0,
     timeUp: !!d.timeUp,
     submittedAt: asDate(d.submittedAt),
+    deletedAt: asDate(d.deletedAt),
     score: scoreOf(d.answers || [], d.examCode || '')
   };
 }
 
 async function loadData() {
   const tbody = document.getElementById('table-body');
-  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#8a97a8;">불러오는 중...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#8a97a8;">불러오는 중...</td></tr>`;
 
   let waited = 0;
   while ((!window.__firebase || !window.__firebase.ready) && waited < 5000) {
@@ -971,18 +1168,18 @@ async function loadData() {
     waited += 200;
   }
   if (!window.__firebase || !window.__firebase.ready) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#e63946;">Firebase 연결 실패. 새로고침 해주세요.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#e63946;">Firebase 연결 실패. 새로고침 해주세요.</td></tr>`;
     return;
   }
 
   try {
     const { db, collection, collectionGroup, getDocs, query, orderBy } = window.__firebase;
-    allSubmissions = [];
+    const combined = [];
 
     const attemptSnap = await getDocs(collectionGroup(db, 'attempts'));
     attemptSnap.forEach(documentSnapshot => {
       if (documentSnapshot.data().status === 'submitted') {
-        allSubmissions.push(submissionFromDoc(documentSnapshot));
+        combined.push(submissionFromDoc(documentSnapshot));
       }
     });
 
@@ -990,18 +1187,26 @@ async function loadData() {
     const legacyQuery = query(collection(db, 'submissions'), orderBy('submittedAt', 'desc'));
     const legacySnap = await getDocs(legacyQuery);
     legacySnap.forEach(documentSnapshot => {
-      allSubmissions.push(submissionFromDoc(documentSnapshot));
+      combined.push(submissionFromDoc(documentSnapshot));
     });
+
+    // 휴지통으로 보낸(deletedAt이 있는) 데이터와 정상 데이터를 분리
+    allSubmissions = combined.filter(s => !s.deletedAt);
+    allTrashedSubmissions = combined.filter(s => !!s.deletedAt);
 
     allSubmissions.sort((a, b) =>
       (b.submittedAt ? b.submittedAt.getTime() : 0) -
       (a.submittedAt ? a.submittedAt.getTime() : 0)
     );
+    allTrashedSubmissions.sort((a, b) =>
+      (b.deletedAt ? b.deletedAt.getTime() : 0) -
+      (a.deletedAt ? a.deletedAt.getTime() : 0)
+    );
     populateSchoolFilter();
     renderExamSidebar();
   } catch (e) {
     console.error(e);
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#e63946;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#e63946;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>`;
   }
 }
 
@@ -1111,7 +1316,42 @@ function renderTable() {
         <td>${s.answeredCount}/${s.totalQuestions}</td>
         <td>${em}분 ${es}초 ${s.timeUp ? '<span class="timeup-tag">시간초과</span>' : ''}</td>
         <td>${dateStr}</td>
+        <td><button class="row-trash-btn" onclick="event.stopPropagation();trashSubmission('${s.id}')">🗑 휴지통</button></td>
       </tr>
+    `;
+  }).join('');
+}
+
+function renderDomainScoreHtml(answers, examCode) {
+  const domains = scoreByDomain(answers, examCode);
+  if (domains.length === 0) return '';
+  return `<div class="domain-score-grid">` + domains.map(d => {
+    const cls = d.total === 0 ? '' : (d.correct === d.total ? 'full' : (d.correct === 0 ? 'zero' : 'partial'));
+    return `
+      <div class="domain-score-item">
+        <div class="ds-name">${escapeHtml(d.domain)}</div>
+        <div class="ds-val ${cls}">${d.correct} / ${d.total}</div>
+      </div>
+    `;
+  }).join('') + `</div>`;
+}
+
+// 문항별 맞음/틀림/미응답을 보여주는 답안 그리드 HTML.
+// 상세 모달과 성적표(인쇄) 둘 다 이 함수 하나를 같이 쓴다.
+function buildAnswerGridHtml(examQs, answers) {
+  const labels = ['①','②','③','④','⑤'];
+  return examQs.map((q, i) => {
+    const userAns = answers[i];
+    const isCorrect = userAns === q.answer;
+    const isUnanswered = userAns === undefined || userAns === -1;
+    return `
+      <div class="answer-item ${isUnanswered ? '' : (isCorrect ? 'correct' : 'wrong')}">
+        <div class="qn">${q.num}번 ${isUnanswered ? '(미응답)' : (isCorrect ? '✓' : '✗')}</div>
+        <div class="cat">${escapeHtml(q.cat)}</div>
+        <div style="margin-top:4px;">
+          선택: ${isUnanswered ? '-' : labels[userAns]} ${isCorrect ? '' : `→ 정답: ${labels[q.answer]}`}
+        </div>
+      </div>
     `;
   }).join('');
 }
@@ -1119,6 +1359,7 @@ function renderTable() {
 function openModal(id) {
   const s = allSubmissions.find(x => x.id === id);
   if (!s) return;
+  currentModalSubmissionId = id;
   document.getElementById('modal-name').textContent = `${s.name} (${s.school} · ${s.department} · ${s.grade} · ${s.studentId})`;
   const em = Math.floor(s.elapsedSeconds / 60), es = s.elapsedSeconds % 60;
   document.getElementById('modal-sub').textContent = `소요시간 ${em}분 ${es}초 · 응답 ${s.answeredCount}/${s.totalQuestions} · ${s.timeUp ? '시간초과 자동제출' : '정상 제출'}`;
@@ -1129,40 +1370,251 @@ function openModal(id) {
     `<div style="margin-bottom:.4rem;"><span class="score-badge ${s.score>=80?'score-high':s.score>=50?'score-mid':'score-low'}" style="font-size:1rem;">${s.score}점</span>
     <span style="color:#6b7a8d;font-size:.85rem;margin-left:.5rem;">(${correctCount} / ${examQs.length} 문항 정답)</span></div>`;
 
-  document.getElementById('modal-answers').innerHTML = examQs.map((q, i) => {
-    const userAns = s.answers[i];
-    const isCorrect = userAns === q.answer;
-    const isUnanswered = userAns === undefined || userAns === -1;
-    const labels = ['①','②','③','④','⑤'];
-    return `
-      <div class="answer-item ${isUnanswered ? '' : (isCorrect ? 'correct' : 'wrong')}">
-        <div class="qn">${q.num}번 ${isUnanswered ? '(미응답)' : (isCorrect ? '✓' : '✗')}</div>
-        <div class="cat">${q.cat}</div>
-        <div style="margin-top:4px;">
-          선택: ${isUnanswered ? '-' : labels[userAns]} ${isCorrect ? '' : `→ 정답: ${labels[q.answer]}`}
-        </div>
-      </div>
-    `;
-  }).join('');
+  document.getElementById('modal-domain-scores').innerHTML = renderDomainScoreHtml(s.answers, s.examCode);
+
+  document.getElementById('modal-answers').innerHTML = buildAnswerGridHtml(examQs, s.answers);
 
   document.getElementById('modal-overlay').classList.add('open');
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
+  currentModalSubmissionId = '';
+}
+
+// ── 성적표는 관리자만 다운로드할 수 있어야 하므로, 버튼을 누르는 시점에
+// Firebase Auth 세션이 여전히 관리자 계정인지 한 번 더 실시간으로 확인한다.
+// (페이지 자체가 관리자 로그인 뒤에 있고 Firestore 규칙도 isAdmin()으로 막혀있어
+// 원래도 비관리자는 데이터를 불러올 수 없지만, 세션이 중간에 끊기거나
+// 여러 탭을 오래 열어둔 경우에 대비한 추가 안전장치)
+function isCurrentUserAdmin() {
+  return !!(window.__firebase
+    && window.__firebase.ready
+    && window.__firebase.auth
+    && window.__firebase.auth.currentUser
+    && window.__firebase.auth.currentUser.uid === ADMIN_UID);
+}
+
+// ═══════════════════════════════════════════
+// ── 개별 성적표(인쇄/PDF) 생성 ──
+// ═══════════════════════════════════════════
+
+// 영역별 100점 환산점수가 이 값 미만이면 "과락 위험 영역"으로 표시.
+// NCS 채용시험에서 흔히 쓰이는 40점 기준을 기본값으로 두되, 필요시 이 숫자만 바꾸면 됨.
+const FAIL_RISK_THRESHOLD = 40;
+
+// 같은 시험(examCode) 응시자들의 점수 목록 (정상 제출분만, 휴지통 제외)
+function computeExamScoreList(examCode) {
+  return allSubmissions.filter(x => x.examCode === examCode).map(x => x.score);
+}
+
+// 같은 시험 응시자 중 순위 / 상위 몇 % 인지 계산 (동점자는 같은 순위 취급)
+function computeRankInfo(s) {
+  const scores = computeExamScoreList(s.examCode);
+  const total = scores.length || 1;
+  const higher = scores.filter(v => v > s.score).length;
+  const rank = higher + 1;
+  const topPercent = Math.max(1, Math.min(100, Math.round((rank / total) * 100)));
+  return { rank, total, topPercent };
+}
+
+// 전체 평균 / 최고점 / 최저점 / 상위 30% 커트라인 점수
+function computeComparisonStats(examCode) {
+  const scores = computeExamScoreList(examCode).slice().sort((a, b) => b - a);
+  const total = scores.length;
+  if (total === 0) return { avg: 0, max: 0, min: 0, top30: 0 };
+  const avg = Math.round(scores.reduce((a, b) => a + b, 0) / total);
+  const max = scores[0];
+  const min = scores[total - 1];
+  const idx = Math.max(0, Math.ceil(total * 0.3) - 1);
+  const top30 = scores[idx];
+  return { avg, max, min, top30 };
+}
+
+// 영역별 점수 레이더 차트 (순수 SVG, 별도 차트 라이브러리 없이 직접 좌표 계산)
+// 축이 3개 미만이면 도형이 의미가 없어져서 표로만 대체함
+function buildRadarSvg(domainStats) {
+  const N = domainStats.length;
+  if (N < 3) return '';
+  const size = 260, center = size / 2, maxR = 92;
+  const angleStep = (2 * Math.PI) / N;
+  const startAngle = -Math.PI / 2;
+  const pointAt = (i, ratio) => {
+    const angle = startAngle + i * angleStep;
+    const r = maxR * ratio;
+    return [center + r * Math.cos(angle), center + r * Math.sin(angle)];
+  };
+
+  let gridPolys = '';
+  [0.2, 0.4, 0.6, 0.8, 1].forEach(ratio => {
+    const pts = domainStats.map((_, i) => pointAt(i, ratio).join(',')).join(' ');
+    gridPolys += `<polygon points="${pts}" fill="none" stroke="#e2e8f0" stroke-width="1" />`;
+  });
+
+  let axisLines = '';
+  domainStats.forEach((_, i) => {
+    const [x, y] = pointAt(i, 1);
+    axisLines += `<line x1="${center}" y1="${center}" x2="${x}" y2="${y}" stroke="#e2e8f0" stroke-width="1" />`;
+  });
+
+  const valuePts = domainStats.map((d, i) => {
+    const ratio = d.total > 0 ? (d.correct / d.total) : 0;
+    return pointAt(i, ratio).join(',');
+  }).join(' ');
+
+  let labels = '';
+  domainStats.forEach((d, i) => {
+    const [x, y] = pointAt(i, 1.2);
+    labels += `<text x="${x}" y="${y}" font-size="10.5" fill="#44546b" text-anchor="middle" dominant-baseline="middle">${escapeHtml(d.domain)}</text>`;
+  });
+
+  return `
+    <svg viewBox="0 0 ${size} ${size}" width="240" height="240">
+      ${gridPolys}
+      ${axisLines}
+      <polygon points="${valuePts}" fill="#1a3a5c" fill-opacity="0.28" stroke="#1a3a5c" stroke-width="2" />
+      ${labels}
+    </svg>
+  `;
+}
+
+function buildDomainTableHtml(domainStats) {
+  return `
+    <table class="rp-domain-table">
+      <thead><tr><th>영역</th><th>정답/전체</th><th>환산점수</th><th></th></tr></thead>
+      <tbody>
+        ${domainStats.map(d => {
+          const percent = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+          const risky = percent < FAIL_RISK_THRESHOLD;
+          return `<tr>
+            <td>${escapeHtml(d.domain)}</td>
+            <td>${d.correct} / ${d.total}</td>
+            <td>${percent}점</td>
+            <td>${risky ? '<span class="risk-tag">위험</span>' : ''}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function buildRiskBoxHtml(domainStats) {
+  const risky = domainStats.filter(d => d.total > 0 && Math.round((d.correct / d.total) * 100) < FAIL_RISK_THRESHOLD);
+  if (risky.length === 0) {
+    return `<div class="rp-risk-box safe"><b>과락 위험 영역</b>없음 (전 영역 ${FAIL_RISK_THRESHOLD}점 이상)</div>`;
+  }
+  return `<div class="rp-risk-box"><b>과락 위험 영역 (영역 환산점수 ${FAIL_RISK_THRESHOLD}점 미만)</b>${risky.map(d => escapeHtml(d.domain)).join(', ')}</div>`;
+}
+
+function buildCompareBarsHtml(s, stats) {
+  const rows = [
+    { label: '본인', value: s.score, me: true },
+    { label: '전체 평균', value: stats.avg },
+    { label: '상위 30% 컷', value: stats.top30 },
+    { label: '최고 점수', value: stats.max },
+  ];
+  return rows.map(r => `
+    <div class="rp-compare-row ${r.me ? 'me' : ''}">
+      <div class="rp-compare-label">${r.label}</div>
+      <div class="rp-compare-track"><div class="rp-compare-fill" style="width:${Math.max(0, Math.min(100, r.value))}%;"></div></div>
+      <div class="rp-compare-value">${r.value}점</div>
+    </div>
+  `).join('');
+}
+
+function buildScoreReportHtml(s) {
+  const examQs = questionsForExam(s.examCode);
+  const correctCount = correctCountOf(s.answers, s.examCode);
+  const domainStats = scoreByDomain(s.answers, s.examCode);
+  const rankInfo = computeRankInfo(s);
+  const compareStats = computeComparisonStats(s.examCode);
+  const accuracy = examQs.length > 0 ? Math.round((correctCount / examQs.length) * 100) : 0;
+  const radarSvg = buildRadarSvg(domainStats);
+
+  return `
+    <div class="rp-header">
+      <div class="rp-title">그릿마인드랩 NCS 모의고사 성적표</div>
+      <div class="rp-sub">${escapeHtml(examNames[s.examCode] || s.examCode)} · 제출일시 ${s.submittedAt ? s.submittedAt.toLocaleString('ko-KR') : '-'}</div>
+    </div>
+    <div class="rp-student-line">
+      <span><b>${escapeHtml(s.name)}</b> (${escapeHtml(s.school)} · ${escapeHtml(s.department)} · ${escapeHtml(s.grade)} · ${escapeHtml(s.studentId)})</span>
+      <span>${s.timeUp ? '시간초과 자동제출' : '정상 제출'}</span>
+    </div>
+
+    <div class="rp-stats-grid">
+      <div class="rp-stat-card"><div class="rp-stat-label">획득 점수</div><div class="rp-stat-value accent">${s.score}점</div><div class="rp-stat-sub">/ 100점</div></div>
+      <div class="rp-stat-card"><div class="rp-stat-label">순위</div><div class="rp-stat-value">${rankInfo.rank}</div><div class="rp-stat-sub">/ ${rankInfo.total}명</div></div>
+      <div class="rp-stat-card"><div class="rp-stat-label">상위수준</div><div class="rp-stat-value">${rankInfo.topPercent}%</div><div class="rp-stat-sub">/ 100%</div></div>
+      <div class="rp-stat-card"><div class="rp-stat-label">정답 문항수</div><div class="rp-stat-value">${correctCount}</div><div class="rp-stat-sub">/ ${examQs.length}문항</div></div>
+      <div class="rp-stat-card"><div class="rp-stat-label">정답률</div><div class="rp-stat-value">${accuracy}%</div><div class="rp-stat-sub">/ 100%</div></div>
+    </div>
+
+    ${buildRiskBoxHtml(domainStats)}
+
+    <div class="rp-section-title">영역별 분석</div>
+    <div class="rp-two-col">
+      <div class="rp-radar-wrap">${radarSvg || '<div style="font-size:.8rem;color:#8a97a8;">영역이 3개 미만이라 레이더 차트 대신 표만 표시합니다.</div>'}</div>
+      <div>${buildDomainTableHtml(domainStats)}</div>
+    </div>
+
+    <div class="rp-section-title">점수 비교</div>
+    ${buildCompareBarsHtml(s, compareStats)}
+
+    <div class="rp-section-title">문항별 정답 현황</div>
+    <div class="answer-grid rp-answer-grid">${buildAnswerGridHtml(examQs, s.answers)}</div>
+
+    <div class="rp-footer-note">그릿마인드랩 · 발급일 ${new Date().toLocaleDateString('ko-KR')}</div>
+  `;
+}
+
+// ── 개별 성적표 PDF 다운로드 (브라우저 인쇄 → "PDF로 저장") ──
+function printReport() {
+  if (!isCurrentUserAdmin()) {
+    alert('관리자 로그인 상태가 확인되지 않아 성적표를 다운로드할 수 없습니다. 새로고침 후 다시 로그인해 주세요.');
+    location.reload();
+    return;
+  }
+
+  const s = allSubmissions.find(x => x.id === currentModalSubmissionId);
+  if (!s) { alert('응시 데이터를 찾을 수 없습니다.'); return; }
+
+  document.getElementById('score-report').innerHTML = buildScoreReportHtml(s);
+
+  const prevTitle = document.title;
+  document.title = `${s.name}_성적표`;
+  document.body.classList.add('printing-report');
+
+  const restore = () => {
+    document.body.classList.remove('printing-report');
+    document.title = prevTitle;
+    window.removeEventListener('afterprint', restore);
+  };
+  window.addEventListener('afterprint', restore);
+  window.print();
 }
 
 function exportCSV() {
   const list = getFiltered();
   if (list.length === 0) { alert('내보낼 데이터가 없습니다.'); return; }
 
-  const headers = ['학교','학과','학년','학번','이름','점수','정답수','응답수','전체문항','소요시간(초)','시간초과','제출일시'];
-  const rows = list.map(s => [
-    s.school, s.department, s.grade, s.studentId, s.name,
-    s.score, correctCountOf(s.answers, s.examCode), s.answeredCount, s.totalQuestions,
-    s.elapsedSeconds, s.timeUp ? 'Y' : 'N',
-    s.submittedAt ? s.submittedAt.toLocaleString('ko-KR') : '-'
-  ]);
+  // 현재 시험에 등장하는 영역 목록을 뽑아서 영역별 정답수 컬럼도 함께 내보낸다.
+  const domainNames = currentExamCode
+    ? [...new Set(questionsForExam(currentExamCode).map(q => q.cat || '기타'))]
+    : [];
+
+  const headers = ['학교','학과','학년','학번','이름','점수','정답수','응답수','전체문항','소요시간(초)','시간초과','제출일시', ...domainNames.map(d => `${d}(정답/전체)`)];
+  const rows = list.map(s => {
+    const domainStats = scoreByDomain(s.answers, s.examCode);
+    const domainMap = {};
+    domainStats.forEach(d => { domainMap[d.domain] = `${d.correct}/${d.total}`; });
+    return [
+      s.school, s.department, s.grade, s.studentId, s.name,
+      s.score, correctCountOf(s.answers, s.examCode), s.answeredCount, s.totalQuestions,
+      s.elapsedSeconds, s.timeUp ? 'Y' : 'N',
+      s.submittedAt ? s.submittedAt.toLocaleString('ko-KR') : '-',
+      ...domainNames.map(d => domainMap[d] || '-')
+    ];
+  });
 
   let csv = '\uFEFF' + headers.join(',') + '\n';
   rows.forEach(r => {
@@ -1176,6 +1628,112 @@ function exportCSV() {
   a.download = `CBT_제출현황_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════
+// ── 응시자 데이터 휴지통 (소프트 삭제) ──
+// ═══════════════════════════════════════════
+// 실수로 지우는 것을 막기 위해, 실제 문서를 바로 지우지 않고
+// deletedAt 필드만 채워서 목록에서 숨긴다. 휴지통 탭에서 복구하거나
+// 완전히 지우기(영구 삭제)를 선택할 수 있다.
+
+async function trashSubmission(id) {
+  const s = allSubmissions.find(x => x.id === id);
+  if (!s) return;
+  if (!confirm(`${s.name} (${s.school}) 응시 데이터를 휴지통으로 보낼까요?\n제출 현황 목록에서 숨겨지며, 휴지통에서 복구할 수 있어요.`)) return;
+
+  const ok = await waitFirebaseQ();
+  if (!ok) { alert('Firebase 연결 실패. 새로고침 해주세요.'); return; }
+
+  try {
+    const { db, doc, updateDoc, serverTimestamp } = window.__firebase;
+    await updateDoc(doc(db, s.id), { deletedAt: serverTimestamp() });
+    await loadData();
+  } catch (e) {
+    console.error(e);
+    alert('휴지통으로 이동하는 중 오류가 발생했습니다: ' + e.message);
+  }
+}
+
+function trashCurrentSubmission() {
+  if (!currentModalSubmissionId) return;
+  const id = currentModalSubmissionId;
+  closeModal();
+  trashSubmission(id);
+}
+
+async function restoreSubmission(id) {
+  const s = allTrashedSubmissions.find(x => x.id === id);
+  if (!s) return;
+  if (!confirm(`${s.name} (${s.school}) 응시 데이터를 복구할까요?`)) return;
+
+  const ok = await waitFirebaseQ();
+  if (!ok) { alert('Firebase 연결 실패. 새로고침 해주세요.'); return; }
+
+  try {
+    const { db, doc, updateDoc, deleteField } = window.__firebase;
+    await updateDoc(doc(db, s.id), { deletedAt: deleteField() });
+    await loadData();
+  } catch (e) {
+    console.error(e);
+    alert('복구하는 중 오류가 발생했습니다: ' + e.message);
+  }
+}
+
+async function permanentDeleteSubmission(id) {
+  const s = allTrashedSubmissions.find(x => x.id === id);
+  if (!s) return;
+  if (!confirm(`${s.name} (${s.school}) 응시 데이터를 영구 삭제할까요?\n이 작업은 되돌릴 수 없습니다.`)) return;
+  if (!confirm('정말 완전히 삭제하시겠어요? 한 번 더 확인할게요.')) return;
+
+  const ok = await waitFirebaseQ();
+  if (!ok) { alert('Firebase 연결 실패. 새로고침 해주세요.'); return; }
+
+  try {
+    const { db, doc, deleteDoc } = window.__firebase;
+    await deleteDoc(doc(db, s.id));
+    await loadData();
+  } catch (e) {
+    console.error(e);
+    alert('영구 삭제 중 오류가 발생했습니다: ' + e.message);
+  }
+}
+
+function renderTrashTable() {
+  const list = currentExamCode
+    ? allTrashedSubmissions.filter(s => s.examCode === currentExamCode)
+    : allTrashedSubmissions;
+  const tbody = document.getElementById('trash-table-body');
+  const emptyState = document.getElementById('trash-empty-state');
+
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('trash-table').style.display = 'none';
+    emptyState.style.display = 'block';
+    return;
+  }
+  document.getElementById('trash-table').style.display = 'table';
+  emptyState.style.display = 'none';
+
+  tbody.innerHTML = list.map(s => {
+    const scoreClass = s.score >= 80 ? 'score-high' : s.score >= 50 ? 'score-mid' : 'score-low';
+    const submittedStr = s.submittedAt ? s.submittedAt.toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+    const deletedStr = s.deletedAt ? s.deletedAt.toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+    return `
+      <tr>
+        <td>${escapeHtml(s.school)}</td>
+        <td>${escapeHtml(s.department)} · ${escapeHtml(s.grade)} · ${escapeHtml(s.studentId)}</td>
+        <td>${escapeHtml(s.name)}</td>
+        <td><span class="score-badge ${scoreClass}">${s.score}점</span></td>
+        <td>${submittedStr}</td>
+        <td>${deletedStr}</td>
+        <td class="trash-actions">
+          <button class="restore" onclick="restoreSubmission('${s.id}')">↩ 복구</button>
+          <button class="permanent" onclick="permanentDeleteSubmission('${s.id}')">완전 삭제</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════
@@ -1236,6 +1794,9 @@ function renderExamSidebar() {
   renderQuestionList();
   if (typeof renderSummary === 'function') renderSummary();
   if (typeof renderTable === 'function') renderTable();
+  if (document.getElementById('tab-panel-trash') && document.getElementById('tab-panel-trash').classList.contains('active')) {
+    renderTrashTable();
+  }
 }
 
 function selectExam(code) {

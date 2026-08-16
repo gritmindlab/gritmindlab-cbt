@@ -614,6 +614,17 @@
     .rp-risk-box.safe { border-color: #bfe3cb; background: #f3faf5; color: #2a6f4b; }
     .rp-risk-box b { display:block; font-size:.72rem; margin-bottom:.2rem; opacity:.85; }
 
+    .rp-note-box {
+      border: 1.5px solid #cfe0f5; background: #eef5ff; border-radius: 10px;
+      padding: .7rem .9rem; margin: .3rem 0 1.1rem; font-size: .82rem; color: #1a3a5c;
+    }
+    .rp-note-box b { display: block; font-size: .72rem; margin-bottom: .2rem; opacity: .85; }
+    .rp-wrong-list { display: flex; flex-wrap: wrap; gap: .4rem; margin: .3rem 0 1.1rem; }
+    .rp-wrong-chip {
+      font-size: .74rem; background: #fde8e9; color: #c1121f; border-radius: 14px;
+      padding: 3px 10px; font-weight: 600;
+    }
+
     .rp-compare-row { display: flex; align-items: center; gap: .7rem; margin-bottom: .55rem; font-size: .8rem; }
     .rp-compare-row .rp-compare-label { width: 108px; flex-shrink: 0; color: #44546b; font-weight: 700; }
     .rp-compare-row .rp-compare-track {
@@ -1419,6 +1430,10 @@ function computeRankInfo(s) {
 }
 
 // 전체 평균 / 최고점 / 최저점 / 상위 30% 커트라인 점수
+// ⚠️ 현재 buildScoreReportHtml에서는 호출하지 않음 — 응시자 수가 적을 때
+// (예: 3명 중 1등, 전체평균 34점 등) 소수 데이터 기반 비교값을 성적표에 노출하면
+// 부정확하거나 다른 응시자 점수가 간접적으로 드러날 수 있어서 뺐음.
+// 응시자 수가 충분히 많아지면 buildScoreReportHtml 안에서 다시 호출해서 쓰면 됨.
 function computeComparisonStats(examCode) {
   const scores = computeExamScoreList(examCode).slice().sort((a, b) => b - a);
   const total = scores.length;
@@ -1522,13 +1537,42 @@ function buildCompareBarsHtml(s, stats) {
   `).join('');
 }
 
+// 영역별 환산점수가 가장 낮은 영역(들)을 짚어주는 문구.
+// 다른 응시자와 비교하지 않고 본인 데이터만으로 계산하므로 응시자 수와 무관하게 항상 유효함.
+function buildWeakestDomainNote(domainStats) {
+  const withPercent = domainStats
+    .filter(d => d.total > 0)
+    .map(d => ({ ...d, percent: Math.round((d.correct / d.total) * 100) }));
+  if (withPercent.length === 0) return '';
+  const minPercent = Math.min(...withPercent.map(d => d.percent));
+  const weakest = withPercent.filter(d => d.percent === minPercent).map(d => d.domain);
+  return `<div class="rp-note-box"><b>학습 포커스 제안</b>가장 취약한 영역은 <b>${weakest.map(escapeHtml).join(', ')}</b>(${minPercent}점)입니다. 관련 문제 위주로 복습을 추천합니다.</div>`;
+}
+
+// 틀렸거나 미응답한 문항을 번호·영역 칩(chip) 형태로 모아서 보여주는 복습용 목록.
+function buildWrongQuestionListHtml(examQs, answers) {
+  const items = [];
+  examQs.forEach((q, i) => {
+    const userAns = answers[i];
+    const isUnanswered = userAns === undefined || userAns === -1;
+    const isCorrect = userAns === q.answer;
+    if (!isCorrect) items.push({ num: q.num, cat: q.cat, unanswered: isUnanswered });
+  });
+  if (items.length === 0) {
+    return `<div class="rp-risk-box safe"><b>오답 문항</b>없음 (전 문항 정답)</div>`;
+  }
+  return `<div class="rp-wrong-list">` +
+    items.map(it => `<span class="rp-wrong-chip">${it.num}번 · ${escapeHtml(it.cat)}${it.unanswered ? ' (미응답)' : ''}</span>`).join('') +
+    `</div>`;
+}
+
 function buildScoreReportHtml(s) {
   const examQs = questionsForExam(s.examCode);
   const correctCount = correctCountOf(s.answers, s.examCode);
   const domainStats = scoreByDomain(s.answers, s.examCode);
   const rankInfo = computeRankInfo(s);
-  const compareStats = computeComparisonStats(s.examCode);
   const accuracy = examQs.length > 0 ? Math.round((correctCount / examQs.length) * 100) : 0;
+  const responseRate = examQs.length > 0 ? Math.round((s.answeredCount / examQs.length) * 100) : 0;
   const radarSvg = buildRadarSvg(domainStats);
 
   return `
@@ -1543,9 +1587,9 @@ function buildScoreReportHtml(s) {
 
     <div class="rp-stats-grid">
       <div class="rp-stat-card"><div class="rp-stat-label">획득 점수</div><div class="rp-stat-value accent">${s.score}점</div><div class="rp-stat-sub">/ 100점</div></div>
-      <div class="rp-stat-card"><div class="rp-stat-label">순위</div><div class="rp-stat-value">${rankInfo.rank}</div><div class="rp-stat-sub">/ ${rankInfo.total}명</div></div>
       <div class="rp-stat-card"><div class="rp-stat-label">상위수준</div><div class="rp-stat-value">${rankInfo.topPercent}%</div><div class="rp-stat-sub">/ 100%</div></div>
       <div class="rp-stat-card"><div class="rp-stat-label">정답 문항수</div><div class="rp-stat-value">${correctCount}</div><div class="rp-stat-sub">/ ${examQs.length}문항</div></div>
+      <div class="rp-stat-card"><div class="rp-stat-label">응답률</div><div class="rp-stat-value">${responseRate}%</div><div class="rp-stat-sub">${s.answeredCount} / ${examQs.length}문항</div></div>
       <div class="rp-stat-card"><div class="rp-stat-label">정답률</div><div class="rp-stat-value">${accuracy}%</div><div class="rp-stat-sub">/ 100%</div></div>
     </div>
 
@@ -1557,8 +1601,11 @@ function buildScoreReportHtml(s) {
       <div>${buildDomainTableHtml(domainStats)}</div>
     </div>
 
-    <div class="rp-section-title">점수 비교</div>
-    ${buildCompareBarsHtml(s, compareStats)}
+    <div class="rp-section-title">취약 영역 안내</div>
+    ${buildWeakestDomainNote(domainStats)}
+
+    <div class="rp-section-title">오답 문항</div>
+    ${buildWrongQuestionListHtml(examQs, s.answers)}
 
     <div class="rp-section-title">문항별 정답 현황</div>
     <div class="answer-grid rp-answer-grid">${buildAnswerGridHtml(examQs, s.answers)}</div>

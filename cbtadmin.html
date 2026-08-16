@@ -545,108 +545,119 @@
 
     /* ── 개별 성적표(인쇄/PDF 저장용) ──
        화면에서는 숨겨져 있다가, "성적표 다운로드" 클릭 시 내용을 채우고
-       인쇄 모드에서만 이 영역만 보이도록 전환한다. */
+       인쇄 모드에서만 이 영역만 보이도록 전환한다.
+       문항 수가 시험마다 달라서(30문항/80문항 등) 고정 크기로는 한 장에
+       항상 못 들어갈 수 있어, JS에서 실제 콘텐츠 높이를 재서 A4 한 장
+       높이에 맞게 자동으로 축소(scale)한다. 이 CSS의 폭/여백 숫자들은
+       printReport()의 REPORT_PAGE_WIDTH_PX / REPORT_PAGE_HEIGHT_PX 상수와
+       반드시 짝이 맞아야 하니, 둘 중 하나만 바꾸지 말 것. */
     #score-report { display: none; }
     @media print {
+      @page { size: A4; margin: 8mm; }
       body.printing-report * { visibility: hidden; }
       body.printing-report #score-report,
       body.printing-report #score-report * { visibility: visible; }
       body.printing-report #score-report {
         display: block !important;
-        position: absolute; inset: 0; background: #fff; padding: 28px 34px;
+        position: absolute; top: 0; left: 0;
+        width: 700px; padding: 0; margin: 0; background: #fff;
       }
     }
+    .rp-scale-wrap { transform-origin: top left; padding: 4px 8px; }
+
     .rp-header {
       text-align: center;
       border-bottom: 3px solid #1a3a5c;
-      padding-bottom: .9rem;
-      margin-bottom: 1.2rem;
+      padding-bottom: .5rem;
+      margin-bottom: .7rem;
     }
-    .rp-header .rp-title { font-size: 1.35rem; font-weight: 700; color: #1a3a5c; }
-    .rp-header .rp-sub { font-size: .82rem; color: #6b7a8d; margin-top: .35rem; }
+    .rp-header .rp-title { font-size: 1.2rem; font-weight: 700; color: #1a3a5c; }
+    .rp-header .rp-sub { font-size: .74rem; color: #6b7a8d; margin-top: .25rem; }
     .rp-student-line {
       display: flex; justify-content: space-between; align-items: baseline;
-      font-size: .88rem; color: #44546b; margin-bottom: 1.2rem;
-      border-bottom: 1px solid #e2e8f0; padding-bottom: .7rem;
+      font-size: .8rem; color: #44546b; margin-bottom: .7rem;
+      border-bottom: 1px solid #e2e8f0; padding-bottom: .45rem;
     }
-    .rp-student-line b { color: #1a2332; font-size: 1rem; }
+    .rp-student-line b { color: #1a2332; font-size: .92rem; }
 
     .rp-stats-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: .7rem;
-      margin-bottom: 1.3rem;
+      gap: .5rem;
+      margin-bottom: .8rem;
     }
     .rp-stat-card {
       border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      padding: .7rem .5rem;
+      border-radius: 8px;
+      padding: .5rem .4rem;
       text-align: center;
     }
-    .rp-stat-card .rp-stat-label { font-size: .7rem; color: #6b7a8d; margin-bottom: .3rem; }
-    .rp-stat-card .rp-stat-value { font-size: 1.25rem; font-weight: 700; color: #1a3a5c; }
+    .rp-stat-card .rp-stat-label { font-size: .64rem; color: #6b7a8d; margin-bottom: .2rem; }
+    .rp-stat-card .rp-stat-value { font-size: 1.1rem; font-weight: 700; color: #1a3a5c; }
     .rp-stat-card .rp-stat-value.accent { color: #2a6f4b; }
-    .rp-stat-card .rp-stat-sub { font-size: .68rem; color: #aab4c2; margin-top: .15rem; }
+    .rp-stat-card .rp-stat-sub { font-size: .62rem; color: #aab4c2; margin-top: .1rem; }
 
     .rp-section-title {
-      font-size: .88rem; font-weight: 700; color: #1a3a5c;
-      margin: 1.1rem 0 .6rem; padding-left: .5rem; border-left: 4px solid #1a3a5c;
+      font-size: .82rem; font-weight: 700; color: #1a3a5c;
+      margin: .7rem 0 .4rem; padding-left: .45rem; border-left: 4px solid #1a3a5c;
     }
 
-    .rp-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; align-items: start; }
+    .rp-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
     .rp-radar-wrap { display: flex; justify-content: center; align-items: center; }
 
-    .rp-domain-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .rp-domain-table { width: 100%; border-collapse: collapse; font-size: .72rem; }
     .rp-domain-table th {
-      background: #f7f9fc; color: #44546b; text-align: left; padding: 6px 8px;
+      background: #f7f9fc; color: #44546b; text-align: left; padding: 4px 7px;
       border-bottom: 1.5px solid #e2e8f0; font-weight: 700;
     }
-    .rp-domain-table td { padding: 6px 8px; border-bottom: 1px solid #eef1f5; }
+    .rp-domain-table td { padding: 4px 7px; border-bottom: 1px solid #eef1f5; }
     .rp-domain-table .risk-tag {
-      font-size: .68rem; font-weight: 700; color: #e63946;
-      background: #fde8e9; border-radius: 10px; padding: 1px 7px;
+      font-size: .62rem; font-weight: 700; color: #e63946;
+      background: #fde8e9; border-radius: 10px; padding: 1px 6px;
     }
 
     .rp-risk-box {
-      border: 1.5px solid #f3c5c8; background: #fef4f4; border-radius: 10px;
-      padding: .7rem .9rem; margin: .7rem 0 1.1rem; font-size: .8rem; color: #c1121f;
+      border: 1.5px solid #f3c5c8; background: #fef4f4; border-radius: 8px;
+      padding: .5rem .7rem; margin: .5rem 0 .6rem; font-size: .74rem; color: #c1121f;
     }
     .rp-risk-box.safe { border-color: #bfe3cb; background: #f3faf5; color: #2a6f4b; }
-    .rp-risk-box b { display:block; font-size:.72rem; margin-bottom:.2rem; opacity:.85; }
+    .rp-risk-box b { display:block; font-size:.66rem; margin-bottom:.15rem; opacity:.85; }
 
     .rp-note-box {
-      border: 1.5px solid #cfe0f5; background: #eef5ff; border-radius: 10px;
-      padding: .8rem .9rem; margin: .3rem 0 .8rem; font-size: .8rem; color: #1a3a5c;
-      line-height: 1.65;
+      border: 1.5px solid #cfe0f5; background: #eef5ff; border-radius: 8px;
+      padding: .55rem .7rem; margin: .2rem 0 .5rem; font-size: .74rem; color: #1a3a5c;
+      line-height: 1.5;
     }
-    .rp-note-box b { display: block; font-size: .74rem; margin-bottom: .35rem; color: #14304d; }
-    .rp-wrong-list { display: flex; flex-wrap: wrap; gap: .4rem; margin: .3rem 0 1.1rem; }
+    .rp-note-box b { display: block; font-size: .68rem; margin-bottom: .25rem; color: #14304d; }
+    .rp-wrong-list { display: flex; flex-wrap: wrap; gap: .35rem; margin: .2rem 0 .6rem; }
     .rp-wrong-chip {
-      font-size: .74rem; background: #fde8e9; color: #c1121f; border-radius: 14px;
-      padding: 3px 10px; font-weight: 600;
+      font-size: .68rem; background: #fde8e9; color: #c1121f; border-radius: 12px;
+      padding: 2px 9px; font-weight: 600;
     }
 
-    .rp-compare-row { display: flex; align-items: center; gap: .7rem; margin-bottom: .55rem; font-size: .8rem; }
-    .rp-compare-row .rp-compare-label { width: 108px; flex-shrink: 0; color: #44546b; font-weight: 700; }
+    .rp-compare-row { display: flex; align-items: center; gap: .6rem; margin-bottom: .4rem; font-size: .74rem; }
+    .rp-compare-row .rp-compare-label { width: 96px; flex-shrink: 0; color: #44546b; font-weight: 700; }
     .rp-compare-row .rp-compare-track {
-      flex: 1; background: #eef1f5; border-radius: 6px; height: 16px; position: relative; overflow: hidden;
+      flex: 1; background: #eef1f5; border-radius: 6px; height: 13px; position: relative; overflow: hidden;
     }
     .rp-compare-row .rp-compare-fill {
       height: 100%; border-radius: 6px; background: #1a3a5c;
     }
     .rp-compare-row.me .rp-compare-fill { background: #e0762a; }
-    .rp-compare-row .rp-compare-value { width: 46px; flex-shrink: 0; text-align: right; font-weight: 700; color: #1a2332; }
+    .rp-compare-row .rp-compare-value { width: 42px; flex-shrink: 0; text-align: right; font-weight: 700; color: #1a2332; }
 
-    .rp-footer-note { font-size: .68rem; color: #aab4c2; margin-top: 1.4rem; text-align: right; }
+    .rp-footer-note { font-size: .62rem; color: #aab4c2; margin-top: .8rem; text-align: right; }
 
     .rp-answer-grid {
-      grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)) !important;
-      gap: .4rem !important;
+      grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)) !important;
+      gap: .3rem !important;
+      margin-top: .3rem !important;
     }
-    .rp-answer-grid .answer-item { padding: 6px 8px; font-size: .72rem; }
+    .rp-answer-grid .answer-item { padding: 4px 6px; font-size: .64rem; line-height: 1.4; }
     .rp-answer-grid .answer-item .qn { margin-bottom: 1px; }
   </style>
 </head>
+
 <body>
 
 <!-- ── 관리자 로그인 화면 ── -->
@@ -1574,6 +1585,8 @@ function buildWeakestDomainNote(domainStats) {
 }
 
 // 틀렸거나 미응답한 문항을 번호·영역 칩(chip) 형태로 모아서 보여주는 복습용 목록.
+// ⚠️ 현재 buildScoreReportHtml에서는 호출하지 않음 — "문항별 정답 현황" 그리드에
+// 이미 정답/오답이 다 나와서 중복이라 성적표에서는 뺐음. 필요하면 다시 붙이면 됨.
 function buildWrongQuestionListHtml(examQs, answers) {
   const items = [];
   examQs.forEach((q, i) => {
@@ -1628,9 +1641,6 @@ function buildScoreReportHtml(s) {
     <div class="rp-section-title">취약 영역 안내</div>
     ${buildWeakestDomainNote(domainStats)}
 
-    <div class="rp-section-title">오답 문항</div>
-    ${buildWrongQuestionListHtml(examQs, s.answers)}
-
     <div class="rp-section-title">문항별 정답 현황</div>
     <div class="answer-grid rp-answer-grid">${buildAnswerGridHtml(examQs, s.answers)}</div>
 
@@ -1639,6 +1649,17 @@ function buildScoreReportHtml(s) {
 }
 
 // ── 개별 성적표 PDF 다운로드 (브라우저 인쇄 → "PDF로 저장") ──
+
+// #score-report의 인쇄 시 폭(px)과 A4 한 장 안에 들어갈 수 있는 높이(px).
+// 96dpi(px=1px 기준) 가정, A4(210x297mm)에서 @page margin 8mm를 뺀 뒤
+// 인쇄 오차를 감안해 약간 여유를 둔 값. CSS의 #score-report width:700px와
+// 반드시 같은 값을 써야 하므로, 둘 중 하나만 바꾸지 말 것.
+const REPORT_PAGE_WIDTH_PX = 700;
+const REPORT_PAGE_HEIGHT_PX = 1000;
+// 내용이 아무리 길어도 이 배율보다 더 작게는 줄이지 않음(너무 작아지면 읽기 어려워서).
+// 이 한계 아래로 줄여야 할 만큼 내용이 길면 한 장을 넘어갈 수 있음.
+const MIN_REPORT_SCALE = 0.55;
+
 function printReport() {
   if (!isCurrentUserAdmin()) {
     alert('관리자 로그인 상태가 확인되지 않아 성적표를 다운로드할 수 없습니다. 새로고침 후 다시 로그인해 주세요.');
@@ -1649,7 +1670,24 @@ function printReport() {
   const s = allSubmissions.find(x => x.id === currentModalSubmissionId);
   if (!s) { alert('응시 데이터를 찾을 수 없습니다.'); return; }
 
-  document.getElementById('score-report').innerHTML = buildScoreReportHtml(s);
+  const reportEl = document.getElementById('score-report');
+  reportEl.innerHTML = `<div class="rp-scale-wrap" id="rp-scale-wrap">${buildScoreReportHtml(s)}</div>`;
+  const wrap = document.getElementById('rp-scale-wrap');
+
+  // A4 한 장에 다 들어가도록, 실제로 화면 밖(안 보이는 곳)에 한 번 렌더링해서
+  // 콘텐츠 전체 높이를 잰 다음, 한 장 높이에 맞는 축소 비율을 계산한다.
+  reportEl.style.cssText = 'display:block; position:fixed; left:-99999px; top:0; visibility:hidden;';
+  wrap.style.transform = 'none';
+  wrap.style.width = REPORT_PAGE_WIDTH_PX + 'px';
+
+  const contentHeight = wrap.scrollHeight;
+  const scale = Math.max(MIN_REPORT_SCALE, Math.min(1, REPORT_PAGE_HEIGHT_PX / contentHeight));
+
+  wrap.style.width = (100 / scale) + '%';
+  wrap.style.transform = `scale(${scale})`;
+
+  // 측정용으로 잠깐 덮어썼던 스타일을 원복 — 이후 화면/인쇄 표시는 CSS(printing-report)가 담당.
+  reportEl.removeAttribute('style');
 
   const prevTitle = document.title;
   document.title = `${s.name}_성적표`;

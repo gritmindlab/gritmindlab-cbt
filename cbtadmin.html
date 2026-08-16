@@ -655,6 +655,22 @@
     }
     .rp-answer-grid .answer-item { padding: 4px 6px; font-size: .64rem; line-height: 1.4; }
     .rp-answer-grid .answer-item .qn { margin-bottom: 1px; }
+
+    /* 인쇄 시 축소 계산이 미세하게 어긋나 내용이 한 장을 살짝 넘기더라도,
+       카드/행/박스 "중간"에서 텍스트가 잘리는 일은 없도록 통째로 다음 줄로 넘긴다. */
+    .rp-scale-wrap .answer-item,
+    .rp-scale-wrap .rp-stat-card,
+    .rp-scale-wrap .rp-risk-box,
+    .rp-scale-wrap .rp-note-box,
+    .rp-scale-wrap .rp-domain-table tr,
+    .rp-scale-wrap .rp-compare-row,
+    .rp-scale-wrap .rp-header,
+    .rp-scale-wrap .rp-student-line,
+    .rp-scale-wrap .rp-stats-grid,
+    .rp-scale-wrap .rp-two-col {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
   </style>
 </head>
 
@@ -1655,7 +1671,12 @@ function buildScoreReportHtml(s) {
 // 인쇄 오차를 감안해 약간 여유를 둔 값. CSS의 #score-report width:700px와
 // 반드시 같은 값을 써야 하므로, 둘 중 하나만 바꾸지 말 것.
 const REPORT_PAGE_WIDTH_PX = 700;
-const REPORT_PAGE_HEIGHT_PX = 1000;
+const REPORT_PAGE_HEIGHT_PX = 960;
+// 오프스크린 측정 환경과 실제 인쇄 렌더링 사이에는 미세한 오차(폰트 렌더링,
+// 브라우저 DPI 처리 차이 등)가 있을 수 있어, 계산된 배율에서 한 번 더
+// 여유를 깎아둔다. 이걸 안 두면 계산상으론 딱 맞아도 실제 인쇄에서
+// 마지막 줄 카드가 페이지 경계에 걸려 잘려 보일 수 있음.
+const REPORT_SCALE_SAFETY = 0.96;
 // 내용이 아무리 길어도 이 배율보다 더 작게는 줄이지 않음(너무 작아지면 읽기 어려워서).
 // 이 한계 아래로 줄여야 할 만큼 내용이 길면 한 장을 넘어갈 수 있음.
 const MIN_REPORT_SCALE = 0.55;
@@ -1681,7 +1702,8 @@ function printReport() {
   wrap.style.width = REPORT_PAGE_WIDTH_PX + 'px';
 
   const contentHeight = wrap.scrollHeight;
-  const scale = Math.max(MIN_REPORT_SCALE, Math.min(1, REPORT_PAGE_HEIGHT_PX / contentHeight));
+  const rawScale = REPORT_PAGE_HEIGHT_PX / contentHeight;
+  const scale = Math.max(MIN_REPORT_SCALE, Math.min(1, rawScale * REPORT_SCALE_SAFETY));
 
   wrap.style.width = (100 / scale) + '%';
   wrap.style.transform = `scale(${scale})`;

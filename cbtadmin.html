@@ -1737,7 +1737,11 @@ function exportCSV() {
   const rows = list.map(s => {
     const domainStats = scoreByDomain(s.answers, s.examCode);
     const domainMap = {};
-    domainStats.forEach(d => { domainMap[d.domain] = `${d.correct}/${d.total}`; });
+    // ─ "3/6" 형태 그대로 저장하되, 엑셀이 이를 날짜(3월 6일 등)로 자동 변환하지
+    // 못하도록 ="3/6" 형태의 텍스트 강제 수식으로 감싼다. 엑셀에서 열면
+    // 셀에는 3/6 이 그대로(텍스트로) 표시된다. (CSV 자체 이스케이프는
+        // 아래 rows.forEach에서 큰따옴표를 이중으로 처리하며 함께 처리됨)
+    domainStats.forEach(d => { domainMap[d.domain] = `="${d.correct}/${d.total}"`; });
     return [
       s.school, s.department, s.grade, s.studentId, s.name,
       s.score, correctCountOf(s.answers, s.examCode), s.answeredCount, s.totalQuestions,

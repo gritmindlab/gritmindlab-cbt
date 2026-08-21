@@ -46,7 +46,6 @@
       min-height: 100vh;
     }
 
-    /* ── 비밀번호 화면 ── */
     #screen-pw {
       display: flex;
       align-items: center;
@@ -88,7 +87,6 @@
     .pw-card button:hover { background: #14304d; }
     .pw-error { color: #e63946; font-size: .8rem; margin-top: .6rem; display: none; }
 
-    /* ── 관리자 화면 ── */
     #screen-admin { display: none; }
 
     header {
@@ -133,7 +131,6 @@
     .exam-add-btn:hover { background: #f7f9fc; border-color: #1a3a5c; }
     .content-area { flex: 1; min-width: 0; }
 
-    /* 요약 카드 */
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -151,7 +148,6 @@
     .summary-card .value.avg { color: #2a6f4b; }
     .summary-card .value.low { color: #e63946; }
 
-    /* 필터/검색 바 */
     .toolbar {
       display: flex;
       gap: .7rem;
@@ -183,14 +179,17 @@
     }
     .toolbar .export-btn:hover { background: #21593b; }
 
-    /* 데이터 테이블 */
     .table-wrap {
       background: #fff;
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,.06);
       overflow: hidden;
     }
-    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table { width: 100%; min-width: 820px; border-collapse: collapse; font-size: .85rem; }
     thead th {
       background: #f7f9fc;
       color: #44546b;
@@ -239,7 +238,6 @@
     }
     .empty-state .icon { font-size: 2.2rem; margin-bottom: .8rem; }
 
-    /* 상세 모달 */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -298,7 +296,6 @@
       .summary-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
-    /* ── 탭 ── */
     .tabs {
       display: flex;
       gap: .4rem;
@@ -321,7 +318,6 @@
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
-    /* ── 문제 관리 ── */
     .q-form-card {
       background: #fff;
       border-radius: 12px;
@@ -410,7 +406,6 @@
     .q-list-item .qi-actions button.danger { color: #e63946; border-color: #f3c5c8; }
     .q-list-item .qi-actions button:hover { background: #f7f9fc; }
 
-    /* ── 문제 미리보기 모달 ── */
     .preview-overlay {
       display: none;
       position: fixed;
@@ -453,7 +448,6 @@
       letter-spacing: .5px;
     }
 
-    /* CBT 화면과 동일한 문제 카드 스타일 */
     .pv-question-card {
       background: #fff;
       border-radius: 14px;
@@ -497,7 +491,6 @@
       font-weight: 700; font-size: .82rem; flex-shrink: 0;
     }
 
-    /* ── 영역별 점수 배지 ── */
     .domain-score-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -516,7 +509,6 @@
     .domain-score-item .ds-val.zero { color: #e63946; }
     .domain-score-item .ds-val.partial { color: #b8740a; }
 
-    /* ── 휴지통 탭 ── */
     .trash-actions button {
       background: none;
       border: 1.5px solid #e2e8f0;
@@ -543,14 +535,6 @@
     }
     .row-trash-btn:hover { background: #fef4f4; }
 
-    /* ── 개별 성적표(인쇄/PDF 저장용) ──
-       화면에서는 숨겨져 있다가, "성적표 다운로드" 클릭 시 내용을 채우고
-       인쇄 모드에서만 이 영역만 보이도록 전환한다.
-       문항 수가 시험마다 달라서(30문항/80문항 등) 고정 크기로는 한 장에
-       항상 못 들어갈 수 있어, JS에서 실제 콘텐츠 높이를 재서 A4 한 장
-       높이에 맞게 자동으로 축소(scale)한다. 이 CSS의 폭/여백 숫자들은
-       printReport()의 REPORT_PAGE_WIDTH_PX / REPORT_PAGE_HEIGHT_PX 상수와
-       반드시 짝이 맞아야 하니, 둘 중 하나만 바꾸지 말 것. */
     #score-report { display: none; }
     @media print {
       @page { size: A4; margin: 8mm; }
@@ -656,8 +640,6 @@
     .rp-answer-grid .answer-item { padding: 4px 6px; font-size: .64rem; line-height: 1.4; }
     .rp-answer-grid .answer-item .qn { margin-bottom: 1px; }
 
-    /* 인쇄 시 축소 계산이 미세하게 어긋나 내용이 한 장을 살짝 넘기더라도,
-       카드/행/박스 "중간"에서 텍스트가 잘리는 일은 없도록 통째로 다음 줄로 넘긴다. */
     .rp-scale-wrap .answer-item,
     .rp-scale-wrap .rp-stat-card,
     .rp-scale-wrap .rp-risk-box,
@@ -671,12 +653,26 @@
       break-inside: avoid;
       page-break-inside: avoid;
     }
+
+    .bulk-item {
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: .7rem .9rem;
+      margin-bottom: .5rem;
+      font-size: .82rem;
+    }
+    .bulk-item.warn { border-color: #f3c5c8; background: #fef8f8; }
+    .bulk-item .bi-head { display:flex; align-items:center; gap:.5rem; margin-bottom:.3rem; font-weight:700; color:#1a3a5c; }
+    .bulk-item .bi-cat { font-size:.72rem; background:#e8f0fe; color:#1a3a5c; border-radius:12px; padding:2px 9px; font-weight:700; }
+    .bulk-item .bi-text { color:#44546b; line-height:1.5; margin-bottom:.3rem; }
+    .bulk-item .bi-choices { color:#8a97a8; font-size:.78rem; }
+    .bulk-item .bi-warn { color:#e63946; font-size:.76rem; margin-top:.3rem; font-weight:700; }
   </style>
 </head>
 
 <body>
 
-<!-- ── 관리자 로그인 화면 ── -->
 <div id="screen-pw">
   <div class="pw-card">
     <h2>🔒 관리자 화면</h2>
@@ -688,7 +684,6 @@
   </div>
 </div>
 
-<!-- ── 관리자 화면 ── -->
 <div id="screen-admin">
   <header>
     <div class="logo">그릿마인드랩 CBT 관리자</div>
@@ -714,10 +709,8 @@
       <button class="tab-btn" id="tab-btn-trash" onclick="switchTab('trash')">🗑 휴지통</button>
     </div>
 
-    <!-- ══════════ 탭 1: 제출 현황 ══════════ -->
     <div class="tab-panel active" id="tab-panel-submissions">
 
-    <!-- 요약 카드 -->
     <div class="summary-grid">
       <div class="summary-card">
         <div class="label">총 응시자</div>
@@ -741,7 +734,6 @@
       </div>
     </div>
 
-    <!-- 툴바 -->
     <div class="toolbar">
       <input type="text" class="search-box" id="search-input" placeholder="이름, 학교, 학과, 학년, 학번으로 검색..." oninput="renderTable()" />
       <select id="filter-school" onchange="renderTable()">
@@ -750,8 +742,8 @@
       <button class="export-btn" onclick="exportCSV()">⬇ CSV 다운로드</button>
     </div>
 
-    <!-- 테이블 -->
     <div class="table-wrap">
+      <div class="table-scroll">
       <table id="data-table">
         <thead>
           <tr>
@@ -767,6 +759,7 @@
         </thead>
         <tbody id="table-body"></tbody>
       </table>
+      </div>
       <div class="empty-state" id="empty-state" style="display:none;">
         <div class="icon">📭</div>
         <div>아직 제출된 답안이 없습니다.</div>
@@ -774,10 +767,26 @@
     </div>
 
     </div>
-    <!-- ══════════ /탭 1 ══════════ -->
 
-    <!-- ══════════ 탭 2: 문제 관리 ══════════ -->
     <div class="tab-panel" id="tab-panel-questions">
+
+      <!-- ── 붙여넣기 일괄 등록 ── -->
+      <div class="q-form-card" style="background:#f7f9fc;">
+        <h3>📋 붙여넣기로 여러 문제 한 번에 등록 (1차 초안)</h3>
+        <div style="font-size:.78rem;color:#6b7a8d;line-height:1.6;margin-bottom:1rem;">
+          시험지 텍스트를 통째로 붙여넣으면 문제 번호 · 영역 · 본문 · 보기 5개를 자동으로 인식해서 초안으로 등록해요.
+          영역 이름이 단독으로 한 줄에 있으면("의사소통능력" 등) 그 아래 문제들의 영역으로 인식합니다.
+          단, <b>표·조건 박스 같은 서식은 본문 텍스트에 그대로 딸려 들어가고, 정답은 원본에 없으면 비워둔 채 등록</b>되니
+          등록 후 목록에서 하나씩 확인하며 다듬어 주세요.
+        </div>
+        <div class="form-row">
+          <textarea id="bulk-paste-text" placeholder="여기에 시험 문제 텍스트를 통째로 붙여넣으세요." style="min-height:160px;"></textarea>
+        </div>
+        <button type="button" class="btn-save" style="background:#44546b;" onclick="previewBulkImport()">🔍 미리보기</button>
+        <button type="button" class="btn-save" id="bulk-commit-btn" style="background:#2a6f4b;margin-left:.5rem;" onclick="commitBulkImport()" disabled>➕ 전체 등록</button>
+        <span id="bulk-status" style="margin-left:1rem;font-size:.82rem;"></span>
+        <div id="bulk-preview-list" style="margin-top:1rem;"></div>
+      </div>
 
       <div class="q-form-card">
         <h3 id="q-form-title">➕ 새 문제 추가</h3>
@@ -876,14 +885,13 @@
       <div id="q-list"></div>
 
     </div>
-    <!-- ══════════ /탭 2 ══════════ -->
 
-    <!-- ══════════ 탭 3: 휴지통 ══════════ -->
     <div class="tab-panel" id="tab-panel-trash">
       <div style="font-size:.82rem;color:#6b7a8d;margin-bottom:1rem;">
         휴지통으로 보낸 응시자 데이터입니다. 실수로 지운 경우 "복구"를 누르면 제출 현황 목록으로 되돌아가요. "영구 삭제"는 되돌릴 수 없어요.
       </div>
       <div class="table-wrap">
+        <div class="table-scroll">
         <table id="trash-table">
           <thead>
             <tr>
@@ -898,25 +906,23 @@
           </thead>
           <tbody id="trash-table-body"></tbody>
         </table>
+        </div>
         <div class="empty-state" id="trash-empty-state" style="display:none;">
           <div class="icon">🗑</div>
           <div>휴지통이 비어있습니다.</div>
         </div>
       </div>
     </div>
-    <!-- ══════════ /탭 3 ══════════ -->
 
     </div>
   </div>
 </div>
 
-<!-- ── 문제 미리보기 모달 (단일 문제) ── -->
 <div class="preview-overlay" id="preview-overlay" onclick="if(event.target===this)closePreview()">
   <div class="preview-modal">
     <button class="preview-close" onclick="closePreview()">✕</button>
     <div class="preview-label" id="preview-label">학생 화면 미리보기</div>
 
-    <!-- 전체 미리보기용 네비게이션 -->
     <div id="preview-nav" style="display:none; justify-content:space-between; align-items:center; margin-bottom:.8rem;">
       <button class="btn-save" style="background:#fff;color:#1a3a5c;border:1.5px solid #1a3a5c;padding:7px 14px;font-size:.82rem;" onclick="previewNav(-1)">← 이전</button>
       <span id="preview-nav-label" style="font-size:.82rem;color:#6b7a8d;font-weight:700;"></span>
@@ -936,7 +942,6 @@
   </div>
 </div>
 
-<!-- ── 오픈/마감/응시시간 설정 모달 ── -->
 <div class="modal-overlay" id="schedule-modal-overlay" onclick="if(event.target===this)closeScheduleModal()">
   <div class="modal-card" style="max-width:460px;">
     <h3>🕒 오픈/마감/응시시간 설정</h3>
@@ -961,7 +966,6 @@
   </div>
 </div>
 
-<!-- ── 다른 시험에서 문제 가져오기 모달 ── -->
 <div class="modal-overlay" id="import-modal-overlay" onclick="if(event.target===this)closeImportModal()">
   <div class="modal-card" style="max-width:640px;">
     <h3>📥 다른 시험에서 문제 가져오기</h3>
@@ -984,7 +988,6 @@
   </div>
 </div>
 
-<!-- ── 상세 모달 ── -->
 <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal-card">
     <button class="modal-close" onclick="closeModal()">✕</button>
@@ -1000,7 +1003,6 @@
   </div>
 </div>
 
-<!-- ── 개별 성적표(인쇄 전용, 평소엔 화면에 안 보임) ── -->
 <div id="score-report"></div>
 
 <script>
@@ -1108,7 +1110,6 @@ async function migrateLegacyAnswers() {
   }
 }
 
-// ── 탭 전환 ──
 function switchTab(tab) {
   document.getElementById('tab-btn-submissions').classList.toggle('active', tab === 'submissions');
   document.getElementById('tab-btn-questions').classList.toggle('active', tab === 'questions');
@@ -1143,9 +1144,6 @@ function correctCountOf(answers, examCode) {
   return correct;
 }
 
-// ── 영역별 점수 집계 ──
-// 문제마다 이미 있는 cat(영역) 필드를 기준으로, 응시자의 답안을 영역별로 묶어서
-// 정답수/전체문항수를 계산한다. 시험에 실제로 등장하는 영역만, 문제 등록 순서 기준으로 반환.
 function scoreByDomain(answers, examCode) {
   const qs = questionsForExam(examCode);
   const order = [];
@@ -1222,14 +1220,12 @@ async function loadData() {
       }
     });
 
-    // 이전 버전에서 최종 제출된 자료가 있으면 함께 표시한다.
     const legacyQuery = query(collection(db, 'submissions'), orderBy('submittedAt', 'desc'));
     const legacySnap = await getDocs(legacyQuery);
     legacySnap.forEach(documentSnapshot => {
       combined.push(submissionFromDoc(documentSnapshot));
     });
 
-    // 휴지통으로 보낸(deletedAt이 있는) 데이터와 정상 데이터를 분리
     allSubmissions = combined.filter(s => !s.deletedAt);
     allTrashedSubmissions = combined.filter(s => !!s.deletedAt);
 
@@ -1319,7 +1315,6 @@ function getFiltered() {
 }
 
 function renderTable() {
-  // 정렬 화살표 갱신
   ['school','department','name','score','answeredCount','elapsedSeconds','submittedAt'].forEach(k => {
     const el = document.getElementById('arrow-' + k);
     if (!el) return;
@@ -1375,8 +1370,6 @@ function renderDomainScoreHtml(answers, examCode) {
   }).join('') + `</div>`;
 }
 
-// 문항별 맞음/틀림/미응답을 보여주는 답안 그리드 HTML.
-// 상세 모달과 성적표(인쇄) 둘 다 이 함수 하나를 같이 쓴다.
 function buildAnswerGridHtml(examQs, answers) {
   const labels = ['①','②','③','④','⑤'];
   return examQs.map((q, i) => {
@@ -1421,11 +1414,6 @@ function closeModal() {
   currentModalSubmissionId = '';
 }
 
-// ── 성적표는 관리자만 다운로드할 수 있어야 하므로, 버튼을 누르는 시점에
-// Firebase Auth 세션이 여전히 관리자 계정인지 한 번 더 실시간으로 확인한다.
-// (페이지 자체가 관리자 로그인 뒤에 있고 Firestore 규칙도 isAdmin()으로 막혀있어
-// 원래도 비관리자는 데이터를 불러올 수 없지만, 세션이 중간에 끊기거나
-// 여러 탭을 오래 열어둔 경우에 대비한 추가 안전장치)
 function isCurrentUserAdmin() {
   return !!(window.__firebase
     && window.__firebase.ready
@@ -1434,20 +1422,12 @@ function isCurrentUserAdmin() {
     && window.__firebase.auth.currentUser.uid === ADMIN_UID);
 }
 
-// ═══════════════════════════════════════════
-// ── 개별 성적표(인쇄/PDF) 생성 ──
-// ═══════════════════════════════════════════
-
-// 영역별 100점 환산점수가 이 값 미만이면 "과락 위험 영역"으로 표시.
-// NCS 채용시험에서 흔히 쓰이는 40점 기준을 기본값으로 두되, 필요시 이 숫자만 바꾸면 됨.
 const FAIL_RISK_THRESHOLD = 40;
 
-// 같은 시험(examCode) 응시자들의 점수 목록 (정상 제출분만, 휴지통 제외)
 function computeExamScoreList(examCode) {
   return allSubmissions.filter(x => x.examCode === examCode).map(x => x.score);
 }
 
-// 같은 시험 응시자 중 순위 / 상위 몇 % 인지 계산 (동점자는 같은 순위 취급)
 function computeRankInfo(s) {
   const scores = computeExamScoreList(s.examCode);
   const total = scores.length || 1;
@@ -1457,11 +1437,6 @@ function computeRankInfo(s) {
   return { rank, total, topPercent };
 }
 
-// 전체 평균 / 최고점 / 최저점 / 상위 30% 커트라인 점수
-// ⚠️ 현재 buildScoreReportHtml에서는 호출하지 않음 — 응시자 수가 적을 때
-// (예: 3명 중 1등, 전체평균 34점 등) 소수 데이터 기반 비교값을 성적표에 노출하면
-// 부정확하거나 다른 응시자 점수가 간접적으로 드러날 수 있어서 뺐음.
-// 응시자 수가 충분히 많아지면 buildScoreReportHtml 안에서 다시 호출해서 쓰면 됨.
 function computeComparisonStats(examCode) {
   const scores = computeExamScoreList(examCode).slice().sort((a, b) => b - a);
   const total = scores.length;
@@ -1474,8 +1449,6 @@ function computeComparisonStats(examCode) {
   return { avg, max, min, top30 };
 }
 
-// 영역별 점수 레이더 차트 (순수 SVG, 별도 차트 라이브러리 없이 직접 좌표 계산)
-// 축이 3개 미만이면 도형이 의미가 없어져서 표로만 대체함
 function buildRadarSvg(domainStats) {
   const N = domainStats.length;
   if (N < 3) return '';
@@ -1565,8 +1538,6 @@ function buildCompareBarsHtml(s, stats) {
   `).join('');
 }
 
-// NCS 10개 영역별 실전 학습법. 문제 은행/강의안 제작 시 쓰던 접근 방식을 반영해
-// 영역 특성에 맞는 구체적인 복습 방법을 짧게 정리해둠.
 const STUDY_TIPS = {
   '의사소통능력': '지문을 읽을 때 문단별 핵심어에 표시하며 구조(도입-전개-결론)를 먼저 파악하는 연습을 하세요. 기출/모의 지문을 시간 재고 풀어보면서, 틀린 문제는 "지문의 어느 문장에서 함정이 있었는지" 표시해두는 오답노트를 추천합니다.',
   '수리능력': '응용수리는 자주 나오는 공식(거리·속력·시간, 농도, 일의 양, 확률 등) 유형별로 정리해 반복 계산 훈련을 하세요. 자료해석은 표·그래프를 정독하지 말고 단위와 증감 방향부터 빠르게 스캔한 뒤, 어림산으로 선택지를 먼저 좁히는 습관을 들이면 속도가 붙습니다.',
@@ -1581,8 +1552,6 @@ const STUDY_TIPS = {
 };
 const DEFAULT_STUDY_TIP = '관련 기출·모의문제를 반복해서 풀며 자주 틀리는 유형을 파악하고, 오답노트를 작성해 같은 실수를 줄이는 연습을 추천합니다.';
 
-// 영역별 환산점수가 가장 낮은 영역(들)을 짚어주고, 그 영역에 맞는 구체적인 학습법을 함께 보여준다.
-// 다른 응시자와 비교하지 않고 본인 데이터만으로 계산하므로 응시자 수와 무관하게 항상 유효함.
 function buildWeakestDomainNote(domainStats) {
   const withPercent = domainStats
     .filter(d => d.total > 0)
@@ -1600,9 +1569,6 @@ function buildWeakestDomainNote(domainStats) {
   }).join('');
 }
 
-// 틀렸거나 미응답한 문항을 번호·영역 칩(chip) 형태로 모아서 보여주는 복습용 목록.
-// ⚠️ 현재 buildScoreReportHtml에서는 호출하지 않음 — "문항별 정답 현황" 그리드에
-// 이미 정답/오답이 다 나와서 중복이라 성적표에서는 뺐음. 필요하면 다시 붙이면 됨.
 function buildWrongQuestionListHtml(examQs, answers) {
   const items = [];
   examQs.forEach((q, i) => {
@@ -1664,21 +1630,9 @@ function buildScoreReportHtml(s) {
   `;
 }
 
-// ── 개별 성적표 PDF 다운로드 (브라우저 인쇄 → "PDF로 저장") ──
-
-// #score-report의 인쇄 시 폭(px)과 A4 한 장 안에 들어갈 수 있는 높이(px).
-// 96dpi(px=1px 기준) 가정, A4(210x297mm)에서 @page margin 8mm를 뺀 뒤
-// 인쇄 오차를 감안해 약간 여유를 둔 값. CSS의 #score-report width:700px와
-// 반드시 같은 값을 써야 하므로, 둘 중 하나만 바꾸지 말 것.
 const REPORT_PAGE_WIDTH_PX = 700;
 const REPORT_PAGE_HEIGHT_PX = 960;
-// 오프스크린 측정 환경과 실제 인쇄 렌더링 사이에는 미세한 오차(폰트 렌더링,
-// 브라우저 DPI 처리 차이 등)가 있을 수 있어, 계산된 배율에서 한 번 더
-// 여유를 깎아둔다. 이걸 안 두면 계산상으론 딱 맞아도 실제 인쇄에서
-// 마지막 줄 카드가 페이지 경계에 걸려 잘려 보일 수 있음.
 const REPORT_SCALE_SAFETY = 0.96;
-// 내용이 아무리 길어도 이 배율보다 더 작게는 줄이지 않음(너무 작아지면 읽기 어려워서).
-// 이 한계 아래로 줄여야 할 만큼 내용이 길면 한 장을 넘어갈 수 있음.
 const MIN_REPORT_SCALE = 0.55;
 
 function printReport() {
@@ -1695,8 +1649,6 @@ function printReport() {
   reportEl.innerHTML = `<div class="rp-scale-wrap" id="rp-scale-wrap">${buildScoreReportHtml(s)}</div>`;
   const wrap = document.getElementById('rp-scale-wrap');
 
-  // A4 한 장에 다 들어가도록, 실제로 화면 밖(안 보이는 곳)에 한 번 렌더링해서
-  // 콘텐츠 전체 높이를 잰 다음, 한 장 높이에 맞는 축소 비율을 계산한다.
   reportEl.style.cssText = 'display:block; position:fixed; left:-99999px; top:0; visibility:hidden;';
   wrap.style.transform = 'none';
   wrap.style.width = REPORT_PAGE_WIDTH_PX + 'px';
@@ -1708,7 +1660,6 @@ function printReport() {
   wrap.style.width = (100 / scale) + '%';
   wrap.style.transform = `scale(${scale})`;
 
-  // 측정용으로 잠깐 덮어썼던 스타일을 원복 — 이후 화면/인쇄 표시는 CSS(printing-report)가 담당.
   reportEl.removeAttribute('style');
 
   const prevTitle = document.title;
@@ -1728,7 +1679,6 @@ function exportCSV() {
   const list = getFiltered();
   if (list.length === 0) { alert('내보낼 데이터가 없습니다.'); return; }
 
-  // 현재 시험에 등장하는 영역 목록을 뽑아서 영역별 정답수 컬럼도 함께 내보낸다.
   const domainNames = currentExamCode
     ? [...new Set(questionsForExam(currentExamCode).map(q => q.cat || '기타'))]
     : [];
@@ -1737,10 +1687,6 @@ function exportCSV() {
   const rows = list.map(s => {
     const domainStats = scoreByDomain(s.answers, s.examCode);
     const domainMap = {};
-    // ─ "3/6" 형태 그대로 저장하되, 엑셀이 이를 날짜(3월 6일 등)로 자동 변환하지
-    // 못하도록 ="3/6" 형태의 텍스트 강제 수식으로 감싼다. 엑셀에서 열면
-    // 셀에는 3/6 이 그대로(텍스트로) 표시된다. (CSV 자체 이스케이프는
-        // 아래 rows.forEach에서 큰따옴표를 이중으로 처리하며 함께 처리됨)
     domainStats.forEach(d => { domainMap[d.domain] = `="${d.correct}/${d.total}"`; });
     return [
       s.school, s.department, s.grade, s.studentId, s.name,
@@ -1764,13 +1710,6 @@ function exportCSV() {
   a.click();
   URL.revokeObjectURL(url);
 }
-
-// ═══════════════════════════════════════════
-// ── 응시자 데이터 휴지통 (소프트 삭제) ──
-// ═══════════════════════════════════════════
-// 실수로 지우는 것을 막기 위해, 실제 문서를 바로 지우지 않고
-// deletedAt 필드만 채워서 목록에서 숨긴다. 휴지통 탭에서 복구하거나
-// 완전히 지우기(영구 삭제)를 선택할 수 있다.
 
 async function trashSubmission(id) {
   const s = allSubmissions.find(x => x.id === id);
@@ -1871,10 +1810,6 @@ function renderTrashTable() {
   }).join('');
 }
 
-// ═══════════════════════════════════════════
-// ── 문제 관리 ──
-// ═══════════════════════════════════════════
-
 let allQuestions = [];
 let currentDataType = 'none';
 let currentImageDataUri = '';
@@ -1951,7 +1886,6 @@ function renameExamCode(code) {
   saveExamNames();
   renderExamSidebar();
 
-  // Firestore에 오픈/마감 일정이 등록되어 있으면 이름도 함께 갱신
   if (examSchedules[code]) {
     waitFirebaseQ().then(ok => {
       if (!ok) return;
@@ -2026,11 +1960,7 @@ async function addNewExam() {
   switchTab('questions');
 }
 
-// ═══════════════════════════════════════════
-// ── 오픈/마감/응시시간 설정 (Firestore "exams" 컬렉션) ──
-// ═══════════════════════════════════════════
-
-let examSchedules = {}; // { code: { name, openAt, closeAt, durationMinutes } }
+let examSchedules = {};
 
 async function loadExamSchedules() {
   const ok = await waitFirebaseQ();
@@ -2146,10 +2076,6 @@ async function saveSchedule() {
     statusEl.textContent = '저장 중 오류가 발생했습니다: ' + e.message;
   }
 }
-
-// ═══════════════════════════════════════════
-// ── 다른 시험에서 문제 가져오기 ──
-// ═══════════════════════════════════════════
 
 function openImportModal() {
   if (!currentExamCode) { alert('먼저 왼쪽에서 시험을 선택하거나 새로 만들어 주세요.'); return; }
@@ -2314,7 +2240,6 @@ async function saveQuestion() {
     if (currentImageDataUri) {
       mediaOnly = `<img src="${currentImageDataUri}" alt="문제 자료" style="max-width:100%;border-radius:6px;" />`;
     } else if (editingId) {
-      // 수정 중이면서 새 이미지를 선택 안 한 경우, 기존 데이터 유지
       const existing = allQuestions.find(q => q.id === editingId);
       mediaOnly = existing ? (existing.mediaOnly !== undefined ? existing.mediaOnly : existing.data) : '';
     }
@@ -2379,6 +2304,211 @@ async function saveQuestion() {
     statusEl.textContent = '저장 중 오류가 발생했습니다: ' + e.message;
   } finally {
     saveBtn.disabled = false;
+  }
+}
+
+let bulkParsedQuestions = [];
+
+function isQuestionStartLine_(line) {
+  return /^(\d{1,3})[.]\s*(.*)$/.test((line || '').trim());
+}
+function isChoiceMarkLine_(line) {
+  return /^[①②③④⑤]/.test((line || '').trim());
+}
+function isDomainHeaderLine_(line) {
+  return Object.prototype.hasOwnProperty.call(DOMAIN_COLORS, (line || '').trim());
+}
+
+function parseBulkQuestions(raw) {
+  const lines = String(raw || '').replace(/\r\n/g, '\n').split('\n');
+  const questions = [];
+  let currentCat = '';
+  let pendingSetRange = '';
+  let pendingSharedText = '';
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = (lines[i] || '').trim();
+
+    if (!line) { i++; continue; }
+
+    if (isDomainHeaderLine_(line)) {
+      currentCat = line;
+      i++;
+      continue;
+    }
+
+    const srm = line.match(/^\[(\d+)\s*-\s*(\d+)\]\s*(.*)$/);
+    if (srm) {
+      pendingSetRange = `${srm[1]}~${srm[2]}`;
+      pendingSharedText = srm[3] || '';
+      i++;
+      while (i < lines.length && !isQuestionStartLine_(lines[i]) && !isDomainHeaderLine_(lines[i])) {
+        const t = (lines[i] || '').trim();
+        if (t) pendingSharedText += (pendingSharedText ? '\n' : '') + t;
+        i++;
+      }
+      continue;
+    }
+
+    const qm = line.match(/^(\d{1,3})[.]\s*(.*)$/);
+    if (qm) {
+      const num = parseInt(qm[1], 10);
+      const textLines = [];
+      if (qm[2]) textLines.push(qm[2]);
+      i++;
+
+      while (i < lines.length && !isChoiceMarkLine_(lines[i])) {
+        if (isQuestionStartLine_(lines[i]) || isDomainHeaderLine_(lines[i])) break;
+        const t = (lines[i] || '').trim();
+        if (t) textLines.push(t);
+        i++;
+      }
+
+      const choices = [];
+      while (i < lines.length && choices.length < 5 && isChoiceMarkLine_(lines[i])) {
+        const t = (lines[i] || '').trim();
+        let rest = t.slice(1).trim();
+        i++;
+        if (!rest) {
+          while (i < lines.length && !(lines[i] || '').trim()) i++;
+          if (i < lines.length && !isChoiceMarkLine_(lines[i]) && !isQuestionStartLine_(lines[i])) {
+            rest = (lines[i] || '').trim();
+            i++;
+          }
+        }
+        choices.push(rest);
+      }
+
+      const fullText = (pendingSharedText ? pendingSharedText + '\n\n' : '') + textLines.join('\n');
+      const warnings = [];
+      if (choices.length !== 5) warnings.push(`보기 개수가 5개가 아니에요 (${choices.length}개 인식됨)`);
+      if (!currentCat) warnings.push('영역을 인식하지 못해 임시로 "의사소통능력"을 넣었어요');
+
+      questions.push({
+        num,
+        cat: currentCat || '의사소통능력',
+        setRange: pendingSetRange || '',
+        text: fullText.trim(),
+        choices,
+        warnings
+      });
+
+      if (pendingSetRange) {
+        const endStr = pendingSetRange.split('~')[1];
+        if (num >= parseInt(endStr, 10)) {
+          pendingSetRange = '';
+          pendingSharedText = '';
+        }
+      }
+      continue;
+    }
+
+    i++;
+  }
+
+  return questions;
+}
+
+function previewBulkImport() {
+  const raw = document.getElementById('bulk-paste-text').value;
+  if (!raw.trim()) { alert('붙여넣을 문제 텍스트를 입력해 주세요.'); return; }
+
+  bulkParsedQuestions = parseBulkQuestions(raw);
+  renderBulkPreview();
+}
+
+function renderBulkPreview() {
+  const listEl = document.getElementById('bulk-preview-list');
+  const commitBtn = document.getElementById('bulk-commit-btn');
+  const statusEl = document.getElementById('bulk-status');
+
+  if (bulkParsedQuestions.length === 0) {
+    listEl.innerHTML = `<div style="color:#e63946;font-size:.82rem;">문제를 하나도 인식하지 못했어요. 번호가 "1. 문제내용" 형식으로 되어 있는지 확인해 주세요.</div>`;
+    commitBtn.disabled = true;
+    statusEl.textContent = '';
+    return;
+  }
+
+  statusEl.style.color = '#2a6f4b';
+  statusEl.textContent = `${bulkParsedQuestions.length}개 문제를 인식했어요. 아래에서 확인 후 "전체 등록"을 눌러주세요.`;
+  commitBtn.disabled = false;
+
+  listEl.innerHTML = bulkParsedQuestions.map(q => {
+    const preview = q.text.length > 80 ? q.text.slice(0, 80) + '...' : q.text;
+    const setBadge = q.setRange ? `<span class="bi-cat" style="background:#eef1f5;color:#6b7a8d;">세트 ${q.setRange}</span>` : '';
+    return `
+      <div class="bulk-item ${q.warnings.length ? 'warn' : ''}">
+        <div class="bi-head"><span>${q.num}번</span><span class="bi-cat">${escapeHtml(q.cat)}</span>${setBadge}</div>
+        <div class="bi-text">${escapeHtml(preview)}</div>
+        <div class="bi-choices">보기 ${q.choices.length}개: ${q.choices.map(c => escapeHtml(c.length > 20 ? c.slice(0,20)+'...' : c)).join(' / ')}</div>
+        ${q.warnings.length ? `<div class="bi-warn">⚠ ${q.warnings.map(escapeHtml).join(' · ')}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function commitBulkImport() {
+  if (!currentExamCode) {
+    alert('먼저 왼쪽에서 시험을 선택하거나 "＋ 새 시험 추가"로 시험을 만들어 주세요.');
+    return;
+  }
+  if (!bulkParsedQuestions || bulkParsedQuestions.length === 0) {
+    alert('먼저 미리보기를 실행해 주세요.');
+    return;
+  }
+  if (!confirm(`${bulkParsedQuestions.length}개 문제를 "${examNames[currentExamCode] || currentExamCode}" 시험에 등록할까요?\n정답은 원본에 없으면 비워진 채로 등록되며, 등록 후 목록에서 하나씩 입력해야 해요.`)) return;
+
+  const statusEl = document.getElementById('bulk-status');
+  const commitBtn = document.getElementById('bulk-commit-btn');
+  commitBtn.disabled = true;
+  statusEl.style.color = '#6b7a8d';
+  statusEl.textContent = `등록 중... (0/${bulkParsedQuestions.length})`;
+
+  const ok = await waitFirebaseQ();
+  if (!ok) {
+    statusEl.style.color = '#e63946';
+    statusEl.textContent = 'Firebase 연결 실패. 새로고침 해주세요.';
+    commitBtn.disabled = false;
+    return;
+  }
+
+  try {
+    const { db, collection, addDoc } = window.__firebase;
+    let done = 0;
+    for (const q of bulkParsedQuestions) {
+      const choices5 = q.choices.length >= 5
+        ? q.choices.slice(0, 5)
+        : [...q.choices, ...Array(5 - q.choices.length).fill('')];
+      const payload = {
+        num: q.num,
+        cat: q.cat,
+        setRange: q.setRange || '',
+        text: q.text,
+        data: '',
+        mediaOnly: '',
+        boxTitle: '',
+        boxText: '',
+        choices: choices5,
+        examCode: currentExamCode
+      };
+      await addDoc(collection(db, 'questions'), payload);
+      done++;
+      statusEl.textContent = `등록 중... (${done}/${bulkParsedQuestions.length})`;
+    }
+
+    statusEl.style.color = '#2a6f4b';
+    statusEl.textContent = `${done}개 문제를 등록했습니다. 정답이 비어있는 문제는 목록에서 "수정"으로 하나씩 입력해 주세요.`;
+    document.getElementById('bulk-paste-text').value = '';
+    document.getElementById('bulk-preview-list').innerHTML = '';
+    bulkParsedQuestions = [];
+    await loadQuestions();
+  } catch (e) {
+    console.error(e);
+    statusEl.style.color = '#e63946';
+    statusEl.textContent = '등록 중 오류가 발생했습니다: ' + e.message;
+  } finally {
+    commitBtn.disabled = false;
   }
 }
 
@@ -2491,7 +2621,7 @@ function editQuestion(id) {
     if (srcMatch) {
       preview.src = srcMatch[1];
       preview.style.display = 'block';
-      currentImageDataUri = ''; // 새로 고르지 않으면 기존 유지
+      currentImageDataUri = '';
     }
   } else if (media) {
     setDataType('table');
@@ -2530,14 +2660,9 @@ async function deleteQuestion(id) {
   }
 }
 
-// ═══════════════════════════════════════════
-// ── 문제 미리보기 (학생 화면과 동일하게 렌더링) ──
-// ═══════════════════════════════════════════
-
 let previewIndex = 0;
 let previewIsFullMode = false;
 
-// ── 영역별 포인트 컬러 (학생 화면과 동일하게) ──
 const DOMAIN_COLORS = {
   '의사소통능력': { bg: '#e7f0ff', text: '#2054a6' },
   '수리능력':     { bg: '#f1ecfd', text: '#6b3fa0' },
